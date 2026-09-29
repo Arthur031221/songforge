@@ -430,7 +430,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     setup = sub.add_parser("setup", help="install the engine and download the weights")
     setup.add_argument(
-        "--covers", action="store_true", help="also download the cover models now (about 2.5 GB)"
+        "--covers", action="store_true", help="also download the cover models now (about 2.8 GB)"
     )
     setup.add_argument("--json", action="store_true", help="print machine-readable JSON")
     setup.set_defaults(func=cmd_setup)

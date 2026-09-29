@@ -166,8 +166,8 @@ DEMOS = [
 
 ORDER = [
     "pop-rock",
-    "jingle-metal",
     "synthwave-instrumental",
+    "jingle-metal",
     "tonight-awake",
     "river-folk",
     "auld-jazz-funk",
@@ -201,7 +201,6 @@ def run(cmd: list[str]) -> dict:
 
 def make(demo: dict) -> dict:
     AUDIO.mkdir(parents=True, exist_ok=True)
-    mp3 = AUDIO / f"{demo['id']}.mp3"
     if demo.get("official"):
         demo = {**demo, **tonight_awake()}
     base = ["uv", "run", "songforge"]
@@ -261,6 +260,56 @@ def make(demo: dict) -> dict:
         cmd += ["--instrumental"] if demo.get("instrumental") else ["--lyrics", demo["lyrics"]]
     result = run(cmd)
     outer = time.perf_counter() - started
+    return finish(demo, result, outer)
+
+
+def adopt(demo: dict, library_id: str) -> dict:
+    """Record a song that already finished in the library instead of generating it again."""
+    rows = json.loads(
+        subprocess.run(
+            ["uv", "run", "songforge", "list", "--json", "--limit", "500"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+    )
+    row = next(r for r in rows if r["id"] == library_id)
+    if row["status"] != "done":
+        raise RuntimeError(f"{library_id} is {row['status']}")
+    home = Path.home() / ".songforge" / "songs" / library_id
+    result = {
+        "id": library_id,
+        "path": str(home / "audio.flac"),
+        "seconds": row["seconds"],
+        "wall_seconds": row["wall_ms"] / 1000,
+        "peak_rss_bytes": row.get("peak_rss"),
+        "peak_footprint_bytes": row.get("peak_footprint"),
+        "truncated": row["truncated"],
+    }
+    if demo.get("official"):
+        demo = {**demo, **tonight_awake()}
+    if demo["kind"] == "cover":
+        source_wav = ROOT / "demo" / "raw" / f"{demo['source']}.wav"
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-y",
+                "-i",
+                str(source_wav),
+                "-b:a",
+                "96k",
+                str(AUDIO / f"{demo['source']}-source.mp3"),
+            ],
+            check=True,
+        )
+    return finish(demo, result, None)
+
+
+def finish(demo: dict, result: dict, outer: float | None) -> dict:
+    AUDIO.mkdir(parents=True, exist_ok=True)
+    mp3 = AUDIO / f"{demo['id']}.mp3"
     subprocess.run(
         [
             "ffmpeg",
@@ -298,7 +347,7 @@ def make(demo: dict) -> dict:
         "source_audio": f"audio/{demo['source']}-source.mp3" if demo["kind"] == "cover" else None,
         "audio_seconds": result["seconds"],
         "wall_seconds": round(result["wall_seconds"], 1),
-        "cli_wall_seconds": round(outer, 1),
+        "cli_wall_seconds": round(outer, 1) if outer else None,
         "peak_rss_bytes": result["peak_rss_bytes"],
         "peak_footprint_bytes": result.get("peak_footprint_bytes"),
         "truncated": result["truncated"],
@@ -308,7 +357,21 @@ def make(demo: dict) -> dict:
     }
 
 
+def save(entry: dict) -> None:
+    done = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else []
+    done = [d for d in done if d["id"] != entry["id"]] + [entry]
+    order = [d["id"] for d in DEMOS]
+    done.sort(key=lambda d: order.index(d["id"]) if d["id"] in order else 99)
+    MANIFEST.write_text(json.dumps(done, indent=2) + "\n")
+
+
 def main(argv: list[str]) -> int:
+    if argv[:1] == ["--adopt"]:
+        demo_id, library_id = argv[1].split("=", 1)
+        entry = adopt({d["id"]: d for d in DEMOS}[demo_id], library_id)
+        save(entry)
+        print(f"adopted {library_id} as {demo_id}: {entry['wall_seconds']} s")
+        return 0
     done = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else []
     have = {d["id"] for d in done}
     by_id = {d["id"]: d for d in DEMOS}
@@ -320,10 +383,7 @@ def main(argv: list[str]) -> int:
         except (RuntimeError, subprocess.CalledProcessError, KeyError) as error:
             print(f"failed: {error}", flush=True)
             continue
-        done = [d for d in done if d["id"] != entry["id"]] + [entry]
-        order = [d["id"] for d in DEMOS]
-        done.sort(key=lambda d: order.index(d["id"]) if d["id"] in order else 99)
-        MANIFEST.write_text(json.dumps(done, indent=2) + "\n")
+        save(entry)
         print(
             f"   {entry['audio_seconds']:.0f} s of audio in {entry['wall_seconds']:.0f} s",
             flush=True,

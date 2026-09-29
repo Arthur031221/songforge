@@ -23,7 +23,8 @@ class SetupError(RuntimeError):
 
 
 def gib(n: float) -> str:
-    return f"{n / 2**30:.1f} GB"
+    """Decimal gigabytes, the unit Hugging Face and Finder use for downloads and disk."""
+    return f"{n / 1e9:.1f} GB"
 
 
 def preflight(paths, covers: bool = False) -> list[str]:

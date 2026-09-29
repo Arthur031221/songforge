@@ -30,13 +30,13 @@ MLX_MODEL_FILES = [
 VAE_REPO = "m-a-p/YuE2-Vae"
 VAE_REVISION = "95535e72a97bc0f09b8ada125d26b4009428c0e8"
 
-# Cover transcription weights, fetched on first cover (about 2.7 GB).
+# Cover transcription weights, fetched on first cover (about 2.8 GB).
 TRANSCRIPTION_REPO = "m-a-p/SheetSage2"
 MERT_REPO = "m-a-p/MERT-v2-FullSong"
 
 # Approximate download sizes in bytes, used for prompts and disk checks.
 SONG_DOWNLOAD_BYTES = 2_656_158_264 + 4_331_951_136 + 2_929_490_456 + 530_512_720
-COVER_DOWNLOAD_BYTES = 2_529_812_848 + 190_000_000
+COVER_DOWNLOAD_BYTES = 2_529_812_848 + 228_738_564
 
 # 48 kHz audio, 1920 samples per codec frame: 25 semantic tokens per second of audio.
 TOKENS_PER_SECOND = 25
