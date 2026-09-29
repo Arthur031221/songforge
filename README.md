@@ -134,7 +134,8 @@ Every generation made for this README and the listening page, one completed run 
 | Track | Mode | Audio | Wall time | Real-time factor | Peak footprint |
 |---|---|---|---|---|---|
 | `songforge bench` (English pop rock, seed 42) | Fast | 2:53 | 5 min 59 s | 2.08 | 10.8 GiB |
-{{EXTRA_ROWS}}
+| Sunrise on the Road (indie pop, lyrics from Write lyrics) | Fast | 2:36 | 4 min 42 s | 1.81 | 10.1 GiB |
+| Slow Burn (neo soul R&B) | Fast | 2:33 | 6 min 03 s | 2.37 | 10.4 GiB |
 | Tonight Awake (official YuE2 prompt, City Pop) | Fast | 2:59 | 9 min 28 s | 3.18 | 10.5 GiB |
 | Hold On (the bench song, first run) | Fast | 2:53 | 10 min 28 s | 3.64 | not recorded[^2] |
 | Night Drive (synthwave, instrumental) | Fast | 1:10 | 3 min 59 s | 3.41 | 10.4 GiB |
@@ -143,7 +144,7 @@ Every generation made for this README and the listening page, one completed run 
 | Auld Lang Syne, jazz-funk cover | Fast | 0:51 | 1 min 35 s | 1.86 | 10.5 GiB |
 | Engine smoke test, 30 s cap, supplied score | Fast | 0:22 | 3 min 13 s | 8.69 | 8.9 GiB |
 
-How busy the Mac was, from load-average samples on its 10 cores: the smoke test and the first run of the bench song shared it with four other builds compiling and running local models (samples between 30 and 140). Night Drive, Tonight Awake and the Jingle Bells cover ran under lighter load (samples of 15 to 37). The bench run, the end of the HQ song and the Auld Lang Syne cover had it nearly idle (samples of 3).
+How busy the Mac was, from load-average samples on its 10 cores: the smoke test and the first run of the bench song shared it with four other builds compiling and running local models (samples between 30 and 140). Night Drive, Tonight Awake and the Jingle Bells cover ran under lighter load (samples of 15 to 37). The bench run, the end of the HQ song and the Auld Lang Syne cover had it nearly idle (samples of 3). The last two songs ran under light load (3 before, 6 to 12 after).
 
 Where the time goes in the bench song: score planning 40 s (1,651 tokens at 41 per second), token generation 137 s (4,314 tokens at 31.5 per second), acoustic synthesis 163 s, VAE decode 17 s. Under load the same stages took 139 s, 267 s, 172 s and 27 s: the token stages suffer most from a busy machine. The HQ song shared the GPU with a lyric-writer test during its token stage. The Jingle Bells cover spent 24 s transcribing, 54 s on tokens, 37 s on synthesis and 11 s on decode.
 
@@ -152,7 +153,7 @@ Where the time goes in the bench song: score planning 40 s (1,651 tokens at 41 p
 ## Limits and FAQ
 
 - **Apple Silicon only.** The engine is MLX. There is no Intel, Windows or Linux path.
-- **It is not fast on an Air.** A 3-minute song took 6 minutes in Fast mode on an idle MacBook Air M5 (2.1 times real time) and 9 to 10.5 minutes while other heavy work ran. HQ mode runs 32 acoustic steps instead of 8, which made the acoustic stage about 3 times slower per second of audio. A 2:20 HQ song took 14 min 38 s. The GPU does the work, so a Mac with more GPU cores should be faster, but this is the only Mac I measured. Queue a few songs and come back.
+- **It is not fast on an Air.** With the MacBook Air M5 idle or lightly loaded, Fast mode ran 1.8 to 2.4 times real time: 4 min 42 s to 6 min 03 s for songs of 2:33 to 2:53. With other heavy work on the Mac, a 3-minute song took 9 to 10.5 minutes. HQ mode runs 32 acoustic steps instead of 8, which made the acoustic stage about 3 times slower per second of audio. A 2:20 HQ song took 14 min 38 s. The GPU does the work, so a Mac with more GPU cores should be faster, but this is the only Mac I measured. Queue a few songs and come back.
 - **One song at a time.** Jobs queue. Two YuE2 processes would not fit in memory on most Macs.
 - **Length is decided by the model.** The length cap stops token generation, it does not stretch a short song. A capped song is marked in the library.
 - **Instrumental is a strong hint, not a switch.** songforge adds `instrumental, no vocals` and replaces the lyrics with section tags. YuE2 can still hum.

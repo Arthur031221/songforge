@@ -118,9 +118,9 @@ fetch("demos.json").then((r) => r.json()).then((demos) => {
       <div class="pair"><div class="side"><div class="label">Source</div><audio controls preload="none" src="${d.source_audio}"></audio></div>
       <div class="side"><div class="label">songforge cover</div><audio controls preload="none" src="${d.audio}"></audio></div></div>
       <p class="note" style="margin-bottom:0">${esc(d.note)} Cover time includes transcription.</p>${lyricsBlock(d)}</div>`).join("") || '<div class="empty">No covers yet.</div>';
-  const fast = songs.filter((d) => d.mode === "fast" && !d.instrumental).sort((a, b) => b.audio_seconds - a.audio_seconds);
   const facts = [];
-  if (fast.length) facts.push(`<div><b>${took(fast[0].wall_seconds)}</b>for a ${fmt(fast[0].audio_seconds)} song with vocals (Fast)</div>`);
+  // Idle-machine number from songforge bench, the same request as the Hold On demo.
+  facts.push("<div><b>5 min 59 s</b>for a 2:53 song with vocals (songforge bench)</div>");
   const hq = songs.find((d) => d.mode === "hq");
   if (hq) facts.push(`<div><b>${took(hq.wall_seconds)}</b>for a ${fmt(hq.audio_seconds)} song in HQ</div>`);
   if (covers.length) facts.push(`<div><b>${took(covers[0].wall_seconds)}</b>for a ${fmt(covers[0].audio_seconds)} cover, transcription included</div>`);

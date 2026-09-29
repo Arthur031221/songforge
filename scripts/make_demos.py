@@ -158,7 +158,8 @@ DEMOS = [
         "seed": 42,
         "mode": "fast",
         "max_seconds": 240,
-        "note": "English pop rock with the lyrics from songforge bench.",
+        "note": "English pop rock with the lyrics from songforge bench. This run shared the Mac "
+        "with other heavy builds. The same request took 5 min 59 s on an idle Mac.",
     },
     {
         "id": "tonight-awake",
