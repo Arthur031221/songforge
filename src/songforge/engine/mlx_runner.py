@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import itertools
 import json
 import os
+import re
 import resource
 import shutil
 import sys
@@ -233,6 +235,58 @@ def render(job: dict, out: Path, abc: str | None = None) -> dict:
     }
 
 
+VOICE = re.compile(r"^V:\s*(\S+)\s*$")
+
+
+def has_notes(lines: list[str]) -> bool:
+    text = re.sub(r'"[^"]*"', "", "".join(lines))
+    text = re.sub(r"[Zzx][0-9]*", "", text)
+    return re.search(r"[A-Ga-g]", text) is not None
+
+
+def vocalize(abc: str) -> str:
+    """Give the vocal voice the melody when the transcription put it all in the instrument voice.
+
+    A piano or instrumental source transcribes to an empty Vocal voice. In melody
+    mode YuE2 sings the Vocal voice, so it would have nothing to put the lyrics on.
+    This swaps each Vocal block with the Ins block that follows it. A score that
+    already has vocal notes is returned unchanged.
+    """
+    lines = abc.split("\n")
+    body = next((i + 1 for i, line in enumerate(lines) if line.startswith("K:")), None)
+    if body is None:
+        return abc
+    blocks: list[tuple[str, int, int]] = []
+    voice, start = None, None
+    for i in range(body, len(lines) + 1):
+        line = lines[i] if i < len(lines) else "V: __end__"
+        match = VOICE.match(line.strip())
+        if match or line.startswith("%"):
+            if voice is not None:
+                blocks.append((voice, start, i))
+            voice, start = (match.group(1), i + 1) if match else (None, None)
+    vocal = [line for v, a, b in blocks if v == "Vocal" for line in lines[a:b]]
+    ins = [line for v, a, b in blocks if v == "Ins" for line in lines[a:b]]
+    if not vocal or has_notes(vocal) or not has_notes(ins):
+        return abc
+    replace: dict[int, tuple[int, list[str]]] = {}
+    for (v1, a1, b1), (v2, a2, b2) in itertools.pairwise(blocks):
+        if v1 == "Vocal" and v2 == "Ins":
+            replace[a1] = (b1, lines[a2:b2])
+            replace[a2] = (b2, lines[a1:b1])
+    swapped: list[str] = []
+    i = 0
+    while i < len(lines):
+        if i in replace:
+            end, content = replace[i]
+            swapped.extend(content)
+            i = end
+        else:
+            swapped.append(lines[i])
+            i += 1
+    return "\n".join(swapped)
+
+
 def transcribe(job: dict, out: Path) -> dict:
     from lyra.transcription.pipeline import transcribe as run
 
@@ -282,7 +336,7 @@ def transcribe(job: dict, out: Path) -> dict:
     if result.get("status") != "complete" or result.get("truncated"):
         raise RuntimeError("Transcription did not produce a complete score")
     abc = (out / "transcription" / "score.abc").read_text()
-    return {"abc": abc}
+    return {"abc": vocalize(abc)}
 
 
 def download(job: dict) -> dict:
@@ -372,7 +426,7 @@ def main(argv: list[str] | None = None) -> int:
             if not abc:
                 abc = transcribe(job, out)["abc"]
                 emit("score", abc=abc)
-            data = render({**job, "cot": "melody"}, out, abc=abc)
+            data = render({**job, "cot": "melody"}, out, abc=vocalize(abc))
         elif args.command == "transcribe":
             data = transcribe(job, out)
         elif args.command == "download":
