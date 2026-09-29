@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>songforge</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4f8b'/%3E%3Cstop offset='1' stop-color='%23ffa14a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M9 20v-8M13 23V9M17 19v-6M21 22V10M25 18v-4' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #09090d;
+  --panel: #111118;
+  --card: #16161f;
+  --card-2: #1c1c27;
+  --line: #262633;
+  --line-2: #33334a;
+  --text: #ececf3;
+  --muted: #9a9ab0;
+  --faint: #6c6c82;
+  --accent: #ff4f8b;
+  --accent-2: #ffa14a;
+  --good: #3ddc97;
+  --warn: #ffc857;
+  --bad: #ff5d5d;
+  --grad: linear-gradient(135deg, #ff4f8b 0%, #ff7a5c 55%, #ffa14a 100%);
+  --radius: 14px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--font); }
+body { min-height: 100vh; padding-bottom: 88px; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+.hidden { display: none !important; }
+
+/* Top bar */
+header {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 28px;
+  padding: 14px 28px; background: rgba(9, 9, 13, 0.86); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.2px; }
+.brand-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--grad); display: grid; place-items: center; }
+.brand-mark svg { width: 18px; height: 18px; }
+nav { display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+nav button {
+  border: 0; background: transparent; padding: 7px 18px; border-radius: 999px; color: var(--muted); font-weight: 600;
+}
+nav button.active { background: var(--card-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+.status-pill {
+  margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: var(--panel); border: 1px solid var(--line); color: var(--muted); font-size: 12.5px;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+.dot.ok { background: var(--good); box-shadow: 0 0 10px rgba(61, 220, 151, 0.6); }
+.dot.busy { background: var(--accent-2); animation: pulse 1.2s infinite; }
+.dot.bad { background: var(--bad); }
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+main { max-width: 1320px; margin: 0 auto; padding: 24px 28px; }
+.banner {
+  display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; margin-bottom: 18px; border-radius: var(--radius);
+  background: rgba(255, 200, 87, 0.08); border: 1px solid rgba(255, 200, 87, 0.3); color: #f3dfb0;
+}
+.banner code { font-family: var(--mono); background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 6px; color: #fff; }
+
+/* Layout */
+.split { display: grid; grid-template-columns: 430px 1fr; gap: 24px; align-items: start; }
+@media (max-width: 980px) { .split { grid-template-columns: 1fr; } header { gap: 14px; padding: 12px 16px; } main { padding: 16px; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+.panel.sticky { position: sticky; top: 76px; }
+.panel h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: -0.2px; }
+.sub { color: var(--muted); margin: 0 0 16px; font-size: 13px; }
+.field { margin-bottom: 16px; }
+.field > label, .label { display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 12.5px; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.06em; }
+.label small { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--faint); }
+input[type=text], input[type=number], textarea, select {
+  width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; outline: none;
+  transition: border-color 0.15s;
+}
+textarea { resize: vertical; min-height: 84px; }
+#lyrics, #cv-lyrics { min-height: 210px; font-family: var(--font); line-height: 1.55; }
+input:focus, textarea:focus, select:focus { border-color: #ff4f8b88; box-shadow: 0 0 0 3px #ff4f8b1c; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip {
+  border: 1px solid var(--line-2); background: var(--card); color: var(--muted); border-radius: 999px; padding: 3px 10px; font-size: 12px;
+}
+.chip:hover { color: var(--text); border-color: #ff4f8b88; }
+.chip.tag { font-family: var(--mono); font-size: 11.5px; }
+.row { display: flex; gap: 12px; align-items: center; }
+.row > * { flex: 1; }
+.seg { display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 3px; }
+.seg button { flex: 1; border: 0; background: transparent; padding: 7px 8px; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: 13px; }
+.seg button small { display: block; font-weight: 500; font-size: 11px; color: var(--faint); }
+.seg button.active { background: var(--card-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+.toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; color: var(--text); font-weight: 600; font-size: 13px; }
+.toggle input { display: none; }
+.switch { width: 38px; height: 22px; border-radius: 999px; background: var(--line-2); position: relative; transition: background 0.2s; flex: none; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.toggle input:checked + .switch { background: var(--accent); }
+.toggle input:checked + .switch::after { transform: translateX(16px); }
+.seed { display: flex; gap: 6px; }
+.seed input { flex: 1; }
+.icon-btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; width: 40px; display: grid; place-items: center; color: var(--muted); }
+.icon-btn:hover { color: var(--text); border-color: var(--line-2); }
+.btn {
+  border: 1px solid var(--line-2); background: var(--card-2); border-radius: 11px; padding: 9px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn:hover { border-color: #ff4f8b77; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.small { padding: 5px 10px; font-size: 12.5px; border-radius: 9px; }
+.btn.ghost { background: transparent; }
+.btn.primary {
+  width: 100%; justify-content: center; border: 0; background: var(--grad); color: #fff; padding: 13px; font-size: 15px; border-radius: 13px;
+  box-shadow: 0 8px 28px -8px rgba(255, 79, 139, 0.55);
+}
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.write { border-color: #ff4f8b55; color: #ffb3cc; }
+.write-box { display: flex; gap: 6px; margin-top: 8px; }
+.write-box input { flex: 1; }
+.hint { color: var(--faint); font-size: 12px; margin-top: 6px; }
+.error-text { color: var(--bad); font-size: 13px; margin-top: 8px; }
+
+/* Feed */
+.feed-head { display: flex; align-items: center; justify-content: space-between; margin: 2px 0 14px; }
+.feed-head h2 { margin: 0; font-size: 18px; }
+.feed { display: flex; flex-direction: column; gap: 12px; }
+.empty { text-align: center; padding: 56px 20px; color: var(--muted); border: 1px dashed var(--line-2); border-radius: 18px; }
+.empty strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+.card {
+  display: grid; grid-template-columns: 76px 1fr; gap: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px;
+  transition: border-color 0.2s;
+}
+.card.playing { border-color: #ff4f8b88; box-shadow: 0 0 0 1px #ff4f8b33, 0 12px 40px -18px rgba(255, 79, 139, 0.5); }
+.art { width: 76px; height: 76px; border-radius: 12px; position: relative; overflow: hidden; flex: none; }
+.art button {
+  position: absolute; inset: 0; border: 0; background: rgba(0,0,0,0.0); display: grid; place-items: center; color: #fff; transition: background 0.15s;
+}
+.art button:hover { background: rgba(0,0,0,0.35); }
+.art svg.play { width: 30px; height: 30px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+.art .spin { width: 26px; height: 26px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.card-body { min-width: 0; }
+.card-top { display: flex; align-items: flex-start; gap: 10px; }
+.card-title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-style { color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line); color: var(--muted); }
+.badge.hq { color: #ffd0a0; border-color: #ffa14a55; }
+.badge.cover { color: #b8c7ff; border-color: #7d93ff55; }
+.badge.fail { color: #ffb0b0; border-color: #ff5d5d66; }
+.card-actions { margin-left: auto; display: flex; gap: 6px; flex: none; }
+.wave { width: 100%; height: 44px; margin-top: 10px; cursor: pointer; display: block; }
+.stages { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.stage { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--faint); }
+.stage.done { color: var(--text); border-color: var(--line-2); background: var(--card-2); }
+.stage.now { color: #fff; border-color: transparent; background: var(--grad); }
+.bar { height: 5px; border-radius: 999px; background: var(--line); margin-top: 10px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--grad); border-radius: 999px; transition: width 0.4s ease; }
+.detail { color: var(--muted); font-size: 12.5px; margin-top: 7px; display: flex; justify-content: space-between; gap: 10px; }
+.detail .mono { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+.menu { position: relative; }
+.menu-list {
+  position: absolute; right: 0; top: 34px; z-index: 30; min-width: 170px; background: var(--card-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 5px;
+  box-shadow: 0 18px 40px -12px rgba(0,0,0,0.7);
+}
+.menu-list a, .menu-list button { display: block; width: 100%; text-align: left; padding: 7px 10px; border-radius: 8px; border: 0; background: transparent; text-decoration: none; font-size: 13px; }
+.menu-list a:hover, .menu-list button:hover { background: var(--line); }
+.menu-list .danger { color: #ff9a9a; }
+.lyrics-peek { margin-top: 10px; white-space: pre-wrap; color: var(--muted); font-size: 12.5px; max-height: 0; overflow: hidden; transition: max-height 0.25s; }
+.lyrics-peek.open { max-height: 480px; overflow: auto; }
+
+/* Library */
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar input { max-width: 340px; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .lib-grid { grid-template-columns: 1fr; } }
+.stats { display: flex; gap: 18px; color: var(--muted); font-size: 12.5px; margin-left: auto; }
+.stats b { color: var(--text); }
+
+/* Cover */
+.drop {
+  border: 2px dashed var(--line-2); border-radius: 16px; padding: 30px 18px; text-align: center; color: var(--muted); cursor: pointer; transition: all 0.15s;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 79, 139, 0.07), transparent 70%);
+}
+.drop:hover, .drop.over { border-color: var(--accent); color: var(--text); background: radial-gradient(circle at 50% 0%, rgba(255, 79, 139, 0.16), transparent 70%); }
+.drop strong { display: block; color: var(--text); font-size: 15px; margin: 8px 0 2px; }
+.source { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.source audio { width: 100%; margin-top: 8px; height: 32px; }
+.steps { display: flex; gap: 8px; margin: 4px 0 16px; }
+.step { flex: 1; font-size: 12px; color: var(--faint); border-top: 3px solid var(--line); padding-top: 6px; }
+.step.on { color: var(--text); border-color: var(--accent); }
+.score-box { background: #f7f5ef; border-radius: 12px; padding: 8px; overflow: auto; max-height: 360px; }
+.score-box svg { max-width: 100%; }
+details summary { cursor: pointer; color: var(--muted); font-size: 12.5px; margin: 8px 0; }
+.abc-raw { font-family: var(--mono); font-size: 12px; min-height: 140px; }
+
+/* Player */
+.player {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: grid; grid-template-columns: 300px 1fr 220px; gap: 20px; align-items: center;
+  padding: 12px 24px; background: rgba(13, 13, 19, 0.94); backdrop-filter: blur(14px); border-top: 1px solid var(--line);
+}
+@media (max-width: 900px) { .player { grid-template-columns: 1fr; gap: 6px; } .player .p-right { display: none; } }
+.p-info { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.p-art { width: 46px; height: 46px; border-radius: 9px; flex: none; }
+.p-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-style { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-mid { display: flex; align-items: center; gap: 14px; }
+.p-play { width: 40px; height: 40px; border-radius: 50%; border: 0; background: #fff; color: #111; display: grid; place-items: center; flex: none; }
+.p-time { font-family: var(--mono); font-size: 12px; color: var(--muted); width: 44px; text-align: center; flex: none; }
+#p-wave { flex: 1; height: 38px; cursor: pointer; }
+.p-right { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Modal */
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.65); display: grid; place-items: center; padding: 24px; }
+.modal-card { width: min(980px, 100%); max-height: 90vh; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-radius: 18px; padding: 20px; }
+.modal-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.modal-head h3 { margin: 0; font-size: 17px; }
+.modal-head .grow { flex: 1; }
+.toast { position: fixed; right: 20px; bottom: 96px; z-index: 60; background: var(--card-2); border: 1px solid var(--line-2); padding: 10px 14px; border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M4 15v-6M8 18V6M12 14v-4M16 17V7M20 13v-2"/></svg></div>
+    songforge
+  </div>
+  <nav>
+    <button data-tab="create" class="active">Create</button>
+    <button data-tab="library">Library</button>
+    <button data-tab="cover">Cover</button>
+  </nav>
+  <div class="status-pill" id="status-pill"><span class="dot" id="status-dot"></span><span id="status-text">Connecting</span></div>
+</header>
+
+<main>
+  <div class="banner hidden" id="setup-banner">
+    <div>
+      <b>The engine is not installed yet.</b>
+      <div id="setup-detail" style="margin-top:4px">Run <code>songforge setup</code> in a terminal. It installs mlx-Yue and downloads the YuE2 weights. Then reload this page.</div>
+    </div>
+  </div>
+
+  <!-- Create -->
+  <section id="tab-create">
+    <div class="split">
+      <form class="panel sticky" id="create-form" autocomplete="off">
+        <h2>Create a song</h2>
+        <p class="sub">Style plus lyrics. Everything runs on this Mac.</p>
+        <div class="field">
+          <label for="style">Style <small id="style-count">0 / 600</small></label>
+          <textarea id="style" rows="3" maxlength="600" placeholder="indie pop, warm female vocal, jangly electric guitar, 112 BPM, summer night"></textarea>
+          <div class="chips" id="style-chips"></div>
+        </div>
+        <div class="field" id="lyrics-field">
+          <label for="lyrics">Lyrics <button type="button" class="btn small write hidden" id="write-btn" title="Write lyrics with a local model through Ollama">Write lyrics</button></label>
+          <div class="write-box hidden" id="write-box">
+            <input type="text" id="write-topic" placeholder="What is the song about?">
+            <button type="button" class="btn small" id="write-go">Write</button>
+          </div>
+          <textarea id="lyrics" maxlength="6000" placeholder="[Verse]&#10;Streetlights hum a song I used to know&#10;&#10;[Chorus]&#10;Hold on, the night is young"></textarea>
+          <div class="chips" id="tag-chips"></div>
+          <div class="error-text hidden" id="write-error"></div>
+        </div>
+        <div class="field">
+          <label class="toggle"><input type="checkbox" id="instrumental"><span class="switch"></span>Instrumental</label>
+        </div>
+        <div class="field">
+          <div class="label">Mode</div>
+          <div class="seg" id="mode-seg">
+            <button type="button" data-mode="fast" class="active">Fast<small>8 steps</small></button>
+            <button type="button" data-mode="hq">HQ<small>32 steps</small></button>
+          </div>
+        </div>
+        <div class="row field">
+          <div>
+            <div class="label">Seed</div>
+            <div class="seed">
+              <input type="number" id="seed" min="0" placeholder="random">
+              <button type="button" class="icon-btn" id="dice" title="Random seed">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <div class="label">Max length</div>
+            <select id="max-seconds">
+              <option value="60">1 min</option>
+              <option value="120">2 min</option>
+              <option value="180">3 min</option>
+              <option value="240" selected>4 min</option>
+              <option value="360">6 min</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="title">Title <small>optional</small></label>
+          <input type="text" id="title" maxlength="120" placeholder="Taken from the first lyric line">
+        </div>
+        <button type="submit" class="btn primary" id="create-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          Create
+        </button>
+        <div class="error-text hidden" id="create-error"></div>
+      </form>
+
+      <div>
+        <div class="feed-head"><h2>Your songs</h2><span class="sub" id="queue-note" style="margin:0"></span></div>
+        <div class="feed" id="create-feed"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Library -->
+  <section id="tab-library" class="hidden">
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Search titles, styles and lyrics">
+      <div class="seg" id="kind-seg" style="width:auto">
+        <button type="button" data-kind="" class="active">All</button>
+        <button type="button" data-kind="song">Songs</button>
+        <button type="button" data-kind="cover">Covers</button>
+        <button type="button" data-kind="transcribe">Scores</button>
+      </div>
+      <div class="stats" id="lib-stats"></div>
+    </div>
+    <div class="lib-grid" id="library-feed"></div>
+  </section>
+
+  <!-- Cover -->
+  <section id="tab-cover" class="hidden">
+    <div class="split">
+      <div class="panel sticky">
+        <h2>Cover a song</h2>
+        <p class="sub">Drop a recording. songforge transcribes its melody to a score, then sings it in a new style.</p>
+        <div class="steps"><div class="step on" id="st-1">1. Source</div><div class="step" id="st-2">2. Score</div><div class="step" id="st-3">3. New style</div></div>
+        <div class="drop" id="drop">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <strong>Drop audio here</strong>
+          MP3, WAV, FLAC or M4A, up to 200 MB. Or click to choose.
+          <input type="file" id="file" accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg,.aiff" class="hidden">
+        </div>
+        <div class="source hidden" id="source">
+          <div style="flex:1;min-width:0">
+            <div class="card-title" id="source-name"></div>
+            <div class="card-style" id="source-meta"></div>
+            <audio id="source-audio" controls preload="none"></audio>
+          </div>
+          <button class="icon-btn" id="source-clear" title="Remove" style="height:36px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <div class="label">Melody source</div>
+          <div class="seg" id="task-seg">
+            <button type="button" data-task="melody-full" class="active">Full arrangement<small>vocal and instrument themes</small></button>
+            <button type="button" data-task="melody-vocal">Lead vocal<small>sung melody only</small></button>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom:16px">
+          <button type="button" class="btn" id="transcribe-btn" disabled>Transcribe first</button>
+          <span class="hint" style="margin:0">Optional. Review the score before rendering.</span>
+        </div>
+        <div class="hidden" id="score-area">
+          <div class="label">Transcribed score <small id="score-note"></small></div>
+          <div class="score-box" id="cover-score"></div>
+          <details><summary>Edit ABC</summary><textarea class="abc-raw" id="cover-abc"></textarea></details>
+        </div>
+        <form id="cover-form" autocomplete="off">
+          <div class="field">
+            <label for="cv-style">New style</label>
+            <textarea id="cv-style" rows="2" maxlength="600" placeholder="heavy metal, distorted guitars, double-kick drums, powerful male vocal, 160 BPM"></textarea>
+            <div class="chips" id="cv-style-chips"></div>
+          </div>
+          <div class="field">
+            <label for="cv-lyrics">Lyrics <small>the words to sing on the melody</small></label>
+            <textarea id="cv-lyrics" maxlength="6000" placeholder="[Verse]&#10;..."></textarea>
+            <div class="chips" id="cv-tag-chips"></div>
+          </div>
+          <div class="row field">
+            <div>
+              <div class="label">Mode</div>
+              <div class="seg" id="cv-mode-seg">
+                <button type="button" data-mode="fast" class="active">Fast</button>
+                <button type="button" data-mode="hq">HQ</button>
+              </div>
+            </div>
+            <div>
+              <div class="label">Seed</div>
+              <input type="number" id="cv-seed" min="0" placeholder="random">
+            </div>
+          </div>
+          <button type="submit" class="btn primary" id="cover-btn" disabled>Render cover</button>
+          <div class="error-text hidden" id="cover-error"></div>
+          <p class="hint">The first cover downloads the SheetSage2 and MERT-v2 transcription models, about 2.7 GB.</p>
+        </form>
+      </div>
+      <div>
+        <div class="feed-head"><h2>Covers and scores</h2></div>
+        <div class="feed" id="cover-feed"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="player hidden" id="player">
+  <div class="p-info">
+    <div class="p-art" id="p-art"></div>
+    <div style="min-width:0"><div class="p-title" id="p-title"></div><div class="p-style" id="p-style"></div></div>
+  </div>
+  <div class="p-mid">
+    <button class="p-play" id="p-play" title="Play or pause (space)"></button>
+    <span class="p-time" id="p-cur">0:00</span>
+    <canvas id="p-wave"></canvas>
+    <span class="p-time" id="p-dur">0:00</span>
+  </div>
+  <div class="p-right">
+    <a class="btn small ghost" id="p-mp3">MP3</a>
+    <a class="btn small ghost" id="p-flac">FLAC</a>
+  </div>
+</div>
+<audio id="audio" preload="auto"></audio>
+
+<div class="modal hidden" id="modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="modal-title">Score</h3><div class="grow"></div>
+      <a class="btn small" id="modal-download">Download .abc</a>
+      <button class="btn small" id="modal-close">Close</button>
+    </div>
+    <div class="score-box" id="modal-score"></div>
+    <details><summary>ABC notation</summary><pre class="abc-raw" id="modal-abc" style="white-space:pre-wrap;background:var(--card);padding:12px;border-radius:10px"></pre></details>
+  </div>
+</div>
+
+<script src="/static/abcjs-basic-min.js"></script>
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const state = { songs: new Map(), status: null, tab: "create", mode: "fast", cvMode: "fast", task: "melody-full",
+  upload: null, transcribeId: null, kindFilter: "", playing: null, openMenu: null, openLyrics: new Set() };
+const STAGES = { song: ["planning", "tokenizing", "synth", "render"], cover: ["transcribing", "tokenizing", "synth", "render"], transcribe: ["transcribing"] };
+const STAGE_NAMES = { transcribing: "Transcribing", planning: "Planning", tokenizing: "Tokenizing", synth: "Synth", render: "Render" };
+const STYLE_PRESETS = ["indie pop", "city pop", "synthwave", "lo-fi hip hop", "acoustic folk", "jazz ballad", "r&b", "heavy metal", "country", "female vocal", "male vocal", "upbeat", "melancholic", "120 BPM"];
+const TAGS = ["[Intro]", "[Verse]", "[Pre-Chorus]", "[Chorus]", "[Bridge]", "[Outro]"];
+const ICON_PLAY = '<svg class="play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+const ICON_PAUSE = '<svg class="play" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+
+// Helpers ------------------------------------------------------------------
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function fmtTime(sec) { if (sec == null || !isFinite(sec)) return "0:00"; sec = Math.max(0, Math.round(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; }
+function fmtTook(ms) { if (!ms) return ""; const s = Math.round(ms / 1000); const m = Math.floor(s / 60); return m ? `${m}m ${String(s % 60).padStart(2, "0")}s` : `${s}s`; }
+function hash(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function artStyle(song) {
+  const h = hash(song.id + (song.style || "")); const a = h % 360; const b = (a + 40 + (h >> 9) % 80) % 360; const c = (a + 180 + (h >> 17) % 60) % 360;
+  const x = 20 + (h >> 3) % 60, y = 20 + (h >> 11) % 60;
+  return `background: radial-gradient(circle at ${x}% ${y}%, hsl(${b} 90% 66%) 0%, transparent 55%), radial-gradient(circle at ${100 - x}% ${100 - y}%, hsl(${c} 80% 50%) 0%, transparent 60%), linear-gradient(135deg, hsl(${a} 75% 42%), hsl(${b} 70% 22%));`;
+}
+async function api(path, opts = {}) {
+  const res = await fetch(path, { headers: opts.body && !(opts.body instanceof Blob) ? { "Content-Type": "application/json" } : {}, ...opts });
+  if (!res.ok) {
+    let msg = `${res.status} ${res.statusText}`;
+    try { const j = await res.json(); if (j.detail) msg = typeof j.detail === "string" ? j.detail : j.detail.map((d) => `${d.loc.at(-1)}: ${d.msg}`).join(", "); } catch (e) {}
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.append(t); setTimeout(() => t.remove(), 3200); }
+function audioUrl(s, dl) { const fmt = s.has_mp3 ? "mp3" : s.has_flac ? "flac" : "wav"; return `/api/songs/${s.id}/audio.${fmt}${dl ? "?download=1" : ""}`; }
+function insertAtCursor(el, text) {
+  const start = el.selectionStart ?? el.value.length, end = el.selectionEnd ?? el.value.length;
+  const before = el.value.slice(0, start), after = el.value.slice(end);
+  const pre = before && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : "";
+  el.value = before + pre + text + "\n" + after; const pos = (before + pre + text + "\n").length;
+  el.focus(); el.setSelectionRange(pos, pos);
+}
+function addStyle(el, word) { const v = el.value.trim().replace(/,\s*$/, ""); el.value = v ? `${v}, ${word}` : word; el.focus(); el.dispatchEvent(new Event("input")); }
+
+// Tabs -----------------------------------------------------------------------
+function setTab(tab) {
+  state.tab = tab; $$("nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+  for (const t of ["create", "library", "cover"]) $(`#tab-${t}`).classList.toggle("hidden", t !== tab);
+  history.replaceState(null, "", `#${tab}`); renderAll();
+}
+$$("nav button").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+// Status -----------------------------------------------------------------------
+async function loadStatus() {
+  try { state.status = await api("/api/status"); } catch (e) { $("#status-text").textContent = "Offline"; $("#status-dot").className = "dot bad"; return; }
+  renderStatus();
+}
+function renderStatus() {
+  const st = state.status; if (!st) return; const eng = st.engine;
+  const running = [...state.songs.values()].some((s) => s.status === "running");
+  const queued = [...state.songs.values()].filter((s) => s.status === "queued").length;
+  $("#status-dot").className = "dot " + (!eng.ready ? "bad" : running ? "busy" : "ok");
+  $("#status-text").textContent = !eng.ready ? "Setup needed" : running ? `Rendering${queued ? `, ${queued} queued` : ""}` : `Ready: YuE2-3B ${eng.engine === "mlx" ? "MLX 8-bit" : eng.engine}`;
+  $("#setup-banner").classList.toggle("hidden", eng.ready);
+  if (!eng.ready && !eng.apple_silicon) $("#setup-detail").textContent = "This Mac has no Apple Silicon chip. The MLX engine needs an M1 or later.";
+  $("#write-btn").classList.toggle("hidden", !st.lyrics.available);
+  $("#write-btn").title = st.lyrics.available ? `Write lyrics with ${st.lyrics.model} through Ollama` : "";
+}
+
+// Create form ------------------------------------------------------------------
+function chips(container, items, onClick, cls = "") {
+  container.innerHTML = items.map((t) => `<button type="button" class="chip ${cls}">${esc(t)}</button>`).join("");
+  $$("button", container).forEach((b, i) => b.addEventListener("click", () => onClick(items[i])));
+}
+chips($("#style-chips"), STYLE_PRESETS, (w) => addStyle($("#style"), w));
+chips($("#cv-style-chips"), STYLE_PRESETS, (w) => addStyle($("#cv-style"), w));
+chips($("#tag-chips"), TAGS, (t) => insertAtCursor($("#lyrics"), t), "tag");
+chips($("#cv-tag-chips"), TAGS, (t) => insertAtCursor($("#cv-lyrics"), t), "tag");
+$("#style").addEventListener("input", () => { $("#style-count").textContent = `${$("#style").value.length} / 600`; });
+function segment(sel, key, attr) {
+  $$(`${sel} button`).forEach((b) => b.addEventListener("click", () => { state[key] = b.dataset[attr]; $$(`${sel} button`).forEach((x) => x.classList.toggle("active", x === b)); if (key === "kindFilter") renderAll(); }));
+}
+segment("#mode-seg", "mode", "mode"); segment("#cv-mode-seg", "cvMode", "mode"); segment("#task-seg", "task", "task"); segment("#kind-seg", "kindFilter", "kind");
+$("#dice").addEventListener("click", () => { $("#seed").value = Math.floor(Math.random() * 2 ** 31); });
+$("#instrumental").addEventListener("change", () => { const on = $("#instrumental").checked; $("#lyrics").disabled = on; $("#lyrics-field").style.opacity = on ? 0.45 : 1; });
+$("#create-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault(); const err = $("#create-error"); err.classList.add("hidden");
+  const body = { title: $("#title").value, style: $("#style").value, lyrics: $("#lyrics").value, instrumental: $("#instrumental").checked,
+    mode: state.mode, seed: $("#seed").value === "" ? null : Number($("#seed").value), max_seconds: Number($("#max-seconds").value) };
+  if (!body.style.trim()) { err.textContent = "Describe a style first, for example: city pop, female vocal, 110 BPM"; err.classList.remove("hidden"); return; }
+  $("#create-btn").disabled = true;
+  try { const song = await api("/api/songs", { method: "POST", body: JSON.stringify(body) }); upsert(song); toast(song.queue_position > 1 ? `Queued at position ${song.queue_position}` : "Rendering started"); $("#title").value = ""; }
+  catch (e) { err.textContent = e.message; err.classList.remove("hidden"); }
+  finally { $("#create-btn").disabled = false; }
+});
+$("#write-btn").addEventListener("click", () => { $("#write-box").classList.toggle("hidden"); $("#write-topic").focus(); });
+async function writeLyrics() {
+  const btn = $("#write-go"); const err = $("#write-error"); err.classList.add("hidden"); btn.disabled = true; btn.textContent = "Writing...";
+  try { const r = await api("/api/lyrics", { method: "POST", body: JSON.stringify({ topic: $("#write-topic").value, style: $("#style").value }) }); $("#lyrics").value = r.lyrics; $("#write-box").classList.add("hidden"); }
+  catch (e) { err.textContent = e.message; err.classList.remove("hidden"); }
+  finally { btn.disabled = false; btn.textContent = "Write"; }
+}
+$("#write-go").addEventListener("click", writeLyrics);
+$("#write-topic").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); writeLyrics(); } });
+function reuse(s) {
+  const target = s.kind === "cover" ? "cover" : "create";
+  if (target === "create") {
+    $("#style").value = s.style; $("#lyrics").value = s.instrumental ? "" : s.lyrics; $("#instrumental").checked = !!s.instrumental; $("#instrumental").dispatchEvent(new Event("change"));
+    $("#seed").value = s.seed; $("#max-seconds").value = String(s.max_seconds); $(`#mode-seg button[data-mode="${s.mode}"]`).click(); $("#style").dispatchEvent(new Event("input"));
+  } else { $("#cv-style").value = s.style; $("#cv-lyrics").value = s.lyrics; $("#cv-seed").value = s.seed; }
+  setTab(target); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Cards --------------------------------------------------------------------------
+function stagePills(s) {
+  const order = STAGES[s.kind] || STAGES.song; const idx = order.indexOf(s.stage === "planning" && s.kind === "cover" ? "tokenizing" : s.stage);
+  return `<div class="stages">${order.map((st, i) => `<span class="stage ${s.status === "running" && i === idx ? "now" : (s.status === "running" && i < idx) || s.status === "done" ? "done" : ""}">${STAGE_NAMES[st]}</span>`).join("")}</div>`;
+}
+function elapsed(s) { if (!s.started_at) return ""; return fmtTime(Date.now() / 1000 - s.started_at); }
+function cardHTML(s) {
+  const playing = state.playing === s.id; const isDone = s.status === "done" && s.has_audio;
+  const badges = [];
+  if (s.kind === "cover") badges.push('<span class="badge cover">Cover</span>');
+  if (s.kind === "transcribe") badges.push('<span class="badge cover">Score</span>');
+  if (s.kind !== "transcribe") badges.push(`<span class="badge ${s.mode === "hq" ? "hq" : ""}">${s.mode === "hq" ? "HQ 32" : "Fast 8"}</span>`);
+  if (s.instrumental) badges.push('<span class="badge">Instrumental</span>');
+  if (s.kind !== "transcribe") badges.push(`<span class="badge">seed ${s.seed}</span>`);
+  if (isDone && s.seconds) badges.push(`<span class="badge">${fmtTime(s.seconds)}</span>`);
+  if (s.status === "done" && s.wall_ms) badges.push(`<span class="badge" title="Wall time on this Mac">made in ${fmtTook(s.wall_ms)}</span>`);
+  if (s.truncated) badges.push('<span class="badge" title="Reached the length cap before the model ended the song">capped</span>');
+  if (s.status === "failed") badges.push('<span class="badge fail">Failed</span>');
+  if (s.status === "cancelled") badges.push('<span class="badge fail">Cancelled</span>');
+  let art;
+  if (s.status === "running") art = '<div class="spin"></div>';
+  else if (isDone) art = playing && !$("#audio").paused ? ICON_PAUSE : ICON_PLAY;
+  else art = "";
+  let body = "";
+  if (s.status === "running" || s.status === "queued") {
+    const pct = Math.round((s.progress || 0) * 100);
+    body = `${stagePills(s)}<div class="bar"><div style="width:${s.status === "queued" ? 0 : Math.max(2, pct)}%"></div></div>
+      <div class="detail"><span>${s.status === "queued" ? "Waiting in queue" : esc(s.detail || "Starting")}</span><span class="mono" data-elapsed="${s.id}">${s.status === "running" ? elapsed(s) : ""}</span></div>`;
+  } else if (s.status === "failed") {
+    body = `<div class="error-text">${esc(s.error || "Failed")}</div>`;
+  } else if (isDone) {
+    body = `<canvas class="wave" data-wave="${s.id}"></canvas>`;
+  } else if (s.status === "done" && s.kind === "transcribe") {
+    body = `<div class="detail"><span>Score ready${s.source_name ? ` for ${esc(s.source_name)}` : ""}. Took ${fmtTook(s.wall_ms)}.</span></div>`;
+  }
+  const actions = [];
+  if (s.status === "running" || s.status === "queued") actions.push(`<button class="btn small ghost" data-act="cancel">Cancel</button>`);
+  if (s.status === "done" && s.abc) actions.push(`<button class="btn small ghost" data-act="score">Score</button>`);
+  if (s.kind === "transcribe" && s.status === "done") actions.push(`<button class="btn small" data-act="usescore">Use for cover</button>`);
+  const menu = [];
+  if (isDone && s.has_mp3) menu.push(`<a href="/api/songs/${s.id}/audio.mp3?download=1">Download MP3</a>`);
+  if (isDone && s.has_flac) menu.push(`<a href="/api/songs/${s.id}/audio.flac?download=1">Download FLAC</a>`);
+  if (s.abc) menu.push(`<a href="/api/songs/${s.id}/score.abc?download=1">Download score (.abc)</a>`);
+  if (s.kind !== "transcribe") menu.push(`<button data-act="reuse">Reuse settings</button>`);
+  if (s.lyrics && !s.instrumental) menu.push(`<button data-act="lyrics">${state.openLyrics.has(s.id) ? "Hide" : "Show"} lyrics</button>`);
+  if (s.status !== "running") menu.push(`<button class="danger" data-act="delete">Delete</button>`);
+  const style = s.kind === "transcribe" ? (s.source_name || "") : s.style;
+  return `<div class="card ${playing ? "playing" : ""}" data-id="${s.id}">
+    <div class="art" style="${artStyle(s)}">${isDone ? `<button data-act="play" title="Play">${art}</button>` : `<div style="position:absolute;inset:0;display:grid;place-items:center">${art}</div>`}</div>
+    <div class="card-body">
+      <div class="card-top"><div style="min-width:0"><div class="card-title">${esc(s.title || "Untitled")}</div><div class="card-style">${esc(style)}</div></div>
+        <div class="card-actions">${actions.join("")}${menu.length ? `<div class="menu"><button class="icon-btn" style="height:30px;width:32px" data-act="menu" title="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button><div class="menu-list ${state.openMenu === s.id ? "" : "hidden"}">${menu.join("")}</div></div>` : ""}</div></div>
+      <div class="badges">${badges.join("")}</div>
+      ${body}
+      ${s.lyrics && !s.instrumental ? `<div class="lyrics-peek ${state.openLyrics.has(s.id) ? "open" : ""}">${esc(s.lyrics)}</div>` : ""}
+    </div></div>`;
+}
+function drawWave(canvas, peaks, progress, active) {
+  const dpr = window.devicePixelRatio || 1; const w = canvas.clientWidth, h = canvas.clientHeight; if (!w) return;
+  canvas.width = w * dpr; canvas.height = h * dpr; const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr);
+  const bars = Math.max(20, Math.floor(w / 3.2)); const data = peaks && peaks.length ? peaks : new Array(bars).fill(0.25);
+  const grad = ctx.createLinearGradient(0, 0, w, 0); grad.addColorStop(0, "#ff4f8b"); grad.addColorStop(1, "#ffa14a");
+  for (let i = 0; i < bars; i++) {
+    const v = data[Math.floor((i / bars) * data.length)] || 0; const bh = Math.max(2, v * (h - 4)); const x = i * (w / bars);
+    ctx.fillStyle = i / bars <= progress ? grad : active ? "#4a4a63" : "#34344a";
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, (h - bh) / 2, Math.max(1.4, w / bars - 1.4), bh, 1.5) : ctx.rect(x, (h - bh) / 2, w / bars - 1.4, bh); ctx.fill();
+  }
+}
+function paintWaves() {
+  const audio = $("#audio");
+  $$("canvas[data-wave]").forEach((c) => { const s = state.songs.get(c.dataset.wave); if (!s) return; const active = state.playing === s.id; drawWave(c, s.peaks, active && audio.duration ? audio.currentTime / audio.duration : 0, active); });
+  const cur = state.songs.get(state.playing); if (cur) drawWave($("#p-wave"), cur.peaks, audio.duration ? audio.currentTime / audio.duration : 0, true);
+}
+function bindCard(el) {
+  const s = state.songs.get(el.dataset.id);
+  el.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest("[data-act]"); const wave = ev.target.closest("canvas[data-wave]");
+    if (wave) { const r = wave.getBoundingClientRect(); play(s.id, (ev.clientX - r.left) / r.width); return; }
+    if (!btn) return; const act = btn.dataset.act; const song = state.songs.get(el.dataset.id);
+    if (act === "play") togglePlay(song.id);
+    else if (act === "menu") { ev.stopPropagation(); state.openMenu = state.openMenu === song.id ? null : song.id; renderAll(); }
+    else if (act === "cancel") { try { await api(`/api/songs/${song.id}/cancel`, { method: "POST" }); } catch (e) { toast(e.message); } }
+    else if (act === "delete") { state.openMenu = null; if (!confirm(`Delete "${song.title}"?`)) return; try { await api(`/api/songs/${song.id}`, { method: "DELETE" }); removeSong(song.id); } catch (e) { toast(e.message); } }
+    else if (act === "reuse") { state.openMenu = null; reuse(song); }
+    else if (act === "lyrics") { state.openMenu = null; state.openLyrics.has(song.id) ? state.openLyrics.delete(song.id) : state.openLyrics.add(song.id); renderAll(); }
+    else if (act === "score") showScore(song);
+    else if (act === "usescore") useScore(song);
+  });
+}
+function visible(list) {
+  if (state.tab === "create") return list.filter((s) => s.kind === "song");
+  if (state.tab === "cover") return list.filter((s) => s.kind !== "song");
+  const q = $("#search").value.trim().toLowerCase();
+  return list.filter((s) => (!state.kindFilter || s.kind === state.kindFilter) && (!q || `${s.title} ${s.style} ${s.lyrics} ${s.source_name || ""}`.toLowerCase().includes(q)));
+}
+function renderFeed(container, list, emptyHTML) {
+  container.innerHTML = list.length ? list.map(cardHTML).join("") : `<div class="empty">${emptyHTML}</div>`;
+  $$(".card", container).forEach(bindCard);
+}
+function renderAll() {
+  const list = [...state.songs.values()].sort((a, b) => b.created_at - a.created_at);
+  if (state.tab === "create") renderFeed($("#create-feed"), visible(list), "<strong>No songs yet</strong>Write a style and some lyrics, then press Create. A Fast song takes a few minutes on an M-series Mac.");
+  if (state.tab === "cover") renderFeed($("#cover-feed"), visible(list), "<strong>No covers yet</strong>Drop a recording on the left to start.");
+  if (state.tab === "library") {
+    renderFeed($("#library-feed"), visible(list), "<strong>Nothing here</strong>Songs, covers and scores you make show up in the library.");
+    const done = list.filter((s) => s.status === "done" && s.seconds); const total = done.reduce((a, s) => a + s.seconds, 0);
+    $("#lib-stats").innerHTML = `<span><b>${done.length}</b> tracks</span><span><b>${fmtTime(total)}</b> of music</span>`;
+  }
+  const queued = list.filter((s) => s.status === "queued").length; $("#queue-note").textContent = queued ? `${queued} queued, one renders at a time` : "";
+  renderStatus(); requestAnimationFrame(paintWaves);
+}
+function upsert(s) { const old = state.songs.get(s.id); state.songs.set(s.id, { ...(old || {}), ...s }); renderAll(); if (s.kind === "transcribe" && s.id === state.transcribeId && s.status === "done") useScore(state.songs.get(s.id), true); }
+function removeSong(id) { state.songs.delete(id); if (state.playing === id) { $("#audio").pause(); state.playing = null; $("#player").classList.add("hidden"); } renderAll(); }
+function patchProgress(p) {
+  const s = state.songs.get(p.id); if (!s) return; Object.assign(s, p, { status: "running" });
+  const el = $$(`.card[data-id="${p.id}"]`); if (!el.length) return;
+  el.forEach((card) => { const bar = $(".bar > div", card); if (!bar) { renderAll(); return; } bar.style.width = `${Math.max(2, Math.round((s.progress || 0) * 100))}%`; $(".detail span", card).textContent = s.detail || ""; const pills = $(".stages", card); if (pills) pills.outerHTML = stagePills(s); });
+}
+document.addEventListener("click", (e) => { if (state.openMenu && !e.target.closest(".menu")) { state.openMenu = null; renderAll(); } });
+$("#search").addEventListener("input", renderAll);
+setInterval(() => { $$("[data-elapsed]").forEach((el) => { const s = state.songs.get(el.dataset.elapsed); if (s && s.status === "running") el.textContent = elapsed(s); }); }, 1000);
+
+// Player --------------------------------------------------------------------------
+const audio = $("#audio");
+function play(id, frac) {
+  const s = state.songs.get(id); if (!s || !s.has_audio) return;
+  if (state.playing !== id) {
+    state.playing = id; audio.src = audioUrl(s); $("#player").classList.remove("hidden");
+    $("#p-title").textContent = s.title; $("#p-style").textContent = s.style; $("#p-art").setAttribute("style", artStyle(s));
+    $("#p-mp3").href = `/api/songs/${s.id}/audio.mp3?download=1`; $("#p-mp3").classList.toggle("hidden", !s.has_mp3);
+    $("#p-flac").href = `/api/songs/${s.id}/audio.flac?download=1`; $("#p-flac").classList.toggle("hidden", !s.has_flac);
+  }
+  const start = () => { if (frac != null && audio.duration) audio.currentTime = frac * audio.duration; audio.play(); };
+  if (audio.readyState >= 1) start(); else audio.addEventListener("loadedmetadata", start, { once: true });
+}
+function togglePlay(id) { if (state.playing === id && !audio.paused) audio.pause(); else play(id); }
+function syncPlayer() { $("#p-play").innerHTML = audio.paused ? ICON_PLAY.replace('class="play"', 'width="18" height="18"') : ICON_PAUSE.replace('class="play"', 'width="18" height="18"'); renderAll(); }
+audio.addEventListener("play", syncPlayer); audio.addEventListener("pause", syncPlayer);
+audio.addEventListener("timeupdate", () => { $("#p-cur").textContent = fmtTime(audio.currentTime); $("#p-dur").textContent = fmtTime(audio.duration); paintWaves(); });
+$("#p-play").addEventListener("click", () => (audio.paused ? audio.play() : audio.pause()));
+$("#p-wave").addEventListener("click", (e) => { const r = e.target.getBoundingClientRect(); if (audio.duration) audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration; });
+document.addEventListener("keydown", (e) => { if (e.code === "Space" && state.playing && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) { e.preventDefault(); audio.paused ? audio.play() : audio.pause(); } });
+window.addEventListener("resize", () => requestAnimationFrame(paintWaves));
+
+// Score ---------------------------------------------------------------------------
+function renderScore(target, abc) {
+  target.innerHTML = "";
+  if (!window.ABCJS) { target.innerHTML = `<pre style="color:#111">${esc(abc)}</pre>`; return; }
+  try { ABCJS.renderAbc(target, abc, { responsive: "resize", add_classes: true, paddingtop: 6, paddingbottom: 6, staffwidth: 860 }); }
+  catch (e) { target.innerHTML = `<pre style="color:#111">${esc(abc)}</pre>`; }
+}
+function showScore(s) {
+  $("#modal-title").textContent = `Score: ${s.title}`; $("#modal-abc").textContent = s.abc; $("#modal-download").href = `/api/songs/${s.id}/score.abc?download=1`;
+  $("#modal").classList.remove("hidden"); renderScore($("#modal-score"), s.abc);
+}
+$("#modal-close").addEventListener("click", () => $("#modal").classList.add("hidden"));
+$("#modal").addEventListener("click", (e) => { if (e.target.id === "modal") $("#modal").classList.add("hidden"); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#modal").classList.add("hidden"); });
+
+// Cover ----------------------------------------------------------------------------
+const drop = $("#drop");
+drop.addEventListener("click", () => $("#file").click());
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]); });
+$("#file").addEventListener("change", (e) => { if (e.target.files[0]) uploadFile(e.target.files[0]); });
+function setStep(n) { [1, 2, 3].forEach((i) => $(`#st-${i}`).classList.toggle("on", i <= n)); }
+async function uploadFile(file) {
+  const err = $("#cover-error"); err.classList.add("hidden");
+  drop.querySelector("strong").textContent = `Uploading ${file.name}...`;
+  try {
+    const up = await api(`/api/uploads?name=${encodeURIComponent(file.name)}`, { method: "POST", body: file });
+    state.upload = up; state.transcribeId = null;
+    $("#source-name").textContent = up.name; $("#source-meta").textContent = `${up.seconds ? fmtTime(up.seconds) + ", " : ""}${(up.bytes / 1048576).toFixed(1)} MB`;
+    $("#source-audio").src = `/api/uploads/${up.id}`; $("#source").classList.remove("hidden"); drop.classList.add("hidden");
+    $("#transcribe-btn").disabled = false; $("#cover-btn").disabled = false; $("#score-area").classList.add("hidden"); $("#cover-abc").value = ""; setStep(3);
+  } catch (e) { err.textContent = e.message; err.classList.remove("hidden"); }
+  finally { drop.querySelector("strong").textContent = "Drop audio here"; }
+}
+$("#source-clear").addEventListener("click", () => { state.upload = null; $("#source").classList.add("hidden"); drop.classList.remove("hidden"); $("#transcribe-btn").disabled = true; $("#cover-btn").disabled = true; $("#score-area").classList.add("hidden"); $("#source-audio").removeAttribute("src"); setStep(1); });
+$("#transcribe-btn").addEventListener("click", async () => {
+  if (!state.upload) return;
+  try { const job = await api("/api/transcribe", { method: "POST", body: JSON.stringify({ upload_id: state.upload.id, task: state.task }) }); state.transcribeId = job.id; upsert(job); $("#transcribe-btn").textContent = "Transcribing..."; $("#transcribe-btn").disabled = true; }
+  catch (e) { toast(e.message); }
+});
+function useScore(s, auto) {
+  if (!s.abc) return;
+  $("#score-area").classList.remove("hidden"); $("#cover-abc").value = s.abc; $("#score-note").textContent = `from ${s.source_name || "upload"}`;
+  renderScore($("#cover-score"), s.abc); $("#transcribe-btn").textContent = "Transcribe first"; $("#transcribe-btn").disabled = !state.upload; setStep(3);
+  if (!auto) { setTab("cover"); }
+  if (!state.upload && s.upload_id) state.upload = { id: s.upload_id };
+}
+$("#cover-abc").addEventListener("input", () => renderScore($("#cover-score"), $("#cover-abc").value));
+$("#cover-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault(); const err = $("#cover-error"); err.classList.add("hidden");
+  if (!state.upload) { err.textContent = "Drop a source recording first"; err.classList.remove("hidden"); return; }
+  if (!$("#cv-style").value.trim()) { err.textContent = "Describe the new style first"; err.classList.remove("hidden"); return; }
+  const abc = $("#score-area").classList.contains("hidden") ? null : $("#cover-abc").value.trim() || null;
+  const body = { upload_id: state.upload.id, style: $("#cv-style").value, lyrics: $("#cv-lyrics").value, mode: state.cvMode, seed: $("#cv-seed").value === "" ? null : Number($("#cv-seed").value), task: state.task, abc };
+  $("#cover-btn").disabled = true;
+  try { const job = await api("/api/covers", { method: "POST", body: JSON.stringify(body) }); upsert(job); toast("Cover queued"); }
+  catch (e) { err.textContent = e.message; err.classList.remove("hidden"); }
+  finally { $("#cover-btn").disabled = false; }
+});
+
+// Live updates ------------------------------------------------------------------------
+function connect() {
+  const es = new EventSource("/api/events");
+  es.addEventListener("song", (e) => upsert(JSON.parse(e.data)));
+  es.addEventListener("progress", (e) => patchProgress(JSON.parse(e.data)));
+  es.addEventListener("deleted", (e) => removeSong(JSON.parse(e.data).id));
+  es.addEventListener("hello", () => { $("#status-text").textContent = "Connected"; loadStatus(); });
+  es.onerror = () => { $("#status-dot").className = "dot bad"; $("#status-text").textContent = "Reconnecting"; };
+}
+async function init() {
+  const tab = location.hash.slice(1); if (["create", "library", "cover"].includes(tab)) setTab(tab);
+  try { (await api("/api/songs")).forEach((s) => state.songs.set(s.id, s)); } catch (e) {}
+  renderAll(); await loadStatus(); connect(); setInterval(loadStatus, 30000);
+}
+init();
+</script>
+</body>
+</html>
