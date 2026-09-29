@@ -52,6 +52,12 @@ songforge cover old-recording.mp3 --style "jazz-funk, Rhodes, horns" \
 
 If the studio is running, these commands queue in it, so only one model ever loads.
 
+| Create | Library | Cover |
+|---|---|---|
+| [![Create tab](demo/create.png)](demo/create.png) | [![Library tab](demo/library.png)](demo/library.png) | [![Cover tab](demo/cover.png)](demo/cover.png) |
+
+The score view renders the ABC notation YuE2 planned for the song ([screenshot](demo/score.png)).
+
 ## How it works
 
 ```
@@ -88,6 +94,8 @@ engine child process (mlx-Yue in its own uv env, Python 3.12, MLX 0.32.2)
 ## Commands
 
 Every command has `--help`. Commands that print results accept `--json`.
+
+![songforge doctor and list](demo/cli.gif)
 
 | Command | What it does |
 |---|---|
