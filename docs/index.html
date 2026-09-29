@@ -127,7 +127,7 @@ fetch("demos.json").then((r) => r.json()).then((demos) => {
   facts.push("<div><b>$0</b>per month</div>");
   document.getElementById("facts").innerHTML = facts.join("");
   const dates = demos.map((d) => d.measured.slice(0, 10)); const day = dates.sort().at(-1);
-  document.getElementById("method").textContent = `Method: every track was generated once with the seed shown, no cherry-picking across seeds. MacBook Air M5, 24 GB, macOS 26.6, YuE2-3B with the 8-bit AR model, mlx-Yue 9253ed1. Wall time is measured by songforge from job start to finished FLAC, including model load, score planning, token generation, acoustic synthesis and VAE decode. The machine was also running other workloads, so these times are conservative. Measured ${day}. MP3 at 128 kbps.`;
+  document.getElementById("method").textContent = `Method: every track was generated once with the seed shown, no cherry-picking across seeds. MacBook Air M5, 24 GB, macOS 26.6, YuE2-3B with the 8-bit AR model, mlx-Yue 9253ed1. Wall time is measured by songforge from job start to finished FLAC, including model load, score planning, token generation, acoustic synthesis and VAE decode. Some tracks ran while other heavy builds shared the Mac, so their times are pessimistic. On an idle Mac, songforge bench made the 2:53 pop rock song again, same seed, in 5 min 59 s. Measured ${day}. MP3 at 128 kbps.`;
 }).catch(() => { document.getElementById("songs").innerHTML = '<div class="empty">Could not load demos.json.</div>'; });
 </script>
 </body>

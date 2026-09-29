@@ -85,6 +85,62 @@ I will have you by my side
 """
 
 
+SUNRISE_LYRICS = """[Verse]
+Last shift ended late
+Road lights blink slow
+Empty highway stretch
+Silence hums low
+
+[Chorus]
+Sunrise on the road
+Waking up the night
+Driving home slowly
+Warmth in my heart
+
+[Verse]
+Mile marker 127
+Distant city glow
+Wind in my hair
+Singing to myself
+
+[Chorus]
+Sunrise on the road
+Waking up the night
+Driving home slowly
+Warmth in my heart
+
+[Bridge]
+Just me and the dawn
+No one to talk to
+But the road knows my name
+"""
+
+SLOW_BURN_LYRICS = """[Verse]
+Candle on the table burning low
+Your records spinning soft and slow
+We never needed words to say
+The things we feel at the end of the day
+
+[Chorus]
+Slow burn, slow burn
+Every little flame takes its turn
+Stay here, don't you go
+Let the night move slow
+
+[Verse]
+Rain is tapping on the window pane
+Whisper my name and say it again
+The city sleeps but we're awake
+Holding on for heaven's sake
+
+[Chorus]
+Slow burn, slow burn
+Every little flame takes its turn
+Stay here, don't you go
+Let the night move slow
+"""
+
+
 def tonight_awake() -> dict:
     path = ENGINE_EXAMPLES / "full-song.json"
     data = json.loads(path.read_text())
@@ -137,6 +193,28 @@ DEMOS = [
         "note": "HQ mode (32 acoustic steps).",
     },
     {
+        "id": "sunrise-indie",
+        "kind": "song",
+        "title": "Sunrise on the Road",
+        "style": "English, indie pop, warm female vocal, jangly electric guitar, soft synth pads, "
+        "104 BPM",
+        "lyrics": SUNRISE_LYRICS,
+        "seed": 2026,
+        "mode": "fast",
+        "note": "Lyrics from the Write lyrics button (qwen3:4b through Ollama), unedited.",
+    },
+    {
+        "id": "slow-burn-rnb",
+        "kind": "song",
+        "title": "Slow Burn",
+        "style": "English, neo soul R&B, smooth male vocal, Rhodes piano, warm bass, laid-back "
+        "drums, 76 BPM",
+        "lyrics": SLOW_BURN_LYRICS,
+        "seed": 77,
+        "mode": "fast",
+        "note": "Neo soul R&B, Fast mode.",
+    },
+    {
         "id": "jingle-metal",
         "kind": "cover",
         "title": "Jingle Bells (heavy metal cover)",
@@ -171,6 +249,8 @@ ORDER = [
     "tonight-awake",
     "river-folk",
     "auld-jazz-funk",
+    "sunrise-indie",
+    "slow-burn-rnb",
 ]
 
 

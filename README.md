@@ -1,8 +1,8 @@
 # songforge
 
-A local Suno-style song studio for Apple Silicon. Lyrics plus a style prompt become a full song with vocals, and any recording can be covered in a new genre. YuE2-3B runs on the Mac through MLX.
+A local, Suno-style song studio for Apple Silicon. On a MacBook Air it turned a style prompt and lyrics into a 2:53 song with vocals in 5 minutes 59 seconds[^1], with no GPU rental, no account and no subscription: a 10.4 GB download and $0 a month.
 
-On a MacBook Air, songforge turned a style prompt and lyrics into a 2:59 song with vocals in 9 minutes 28 seconds[^1]. No GPU rental, no account, no subscription. The weights are a 10.4 GB download and the monthly price is $0. Covers work the same way: a 60-second piano recording of Jingle Bells became a 1:03 heavy metal cover in 2 minutes 13 seconds, transcription included.
+Lyrics plus a style prompt become a full song with vocals, and any recording can be covered in a new genre. A 60-second piano recording of Jingle Bells became a 1:03 heavy metal cover in 2 minutes 13 seconds, transcription included. YuE2-3B runs on the Mac through MLX.
 
 [![CI](https://github.com/Arthur031221/songforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Arthur031221/songforge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -14,7 +14,7 @@ On a MacBook Air, songforge turned a style prompt and lyrics into a 2:59 song wi
 
 ## Why
 
-Suno is good and costs $8 a month (Pro) or $24 a month (Premier), and every song lives on someone else's server. YuE2-3B is an open song model that its authors report as competitive with Suno v5, but the official release wants Linux and a 24 GB NVIDIA card. The Mac ports that exist are an engine without a UI, or a UI without covers. I wanted one command that turns my MacBook Air into the whole studio.
+Suno is good and costs $8 a month (Pro) or $24 a month (Premier), and every song lives on someone else's server. YuE2-3B is an open song model that its authors report as competitive with Suno v5 on their own benchmark, but the official release wants Linux and a 24 GB NVIDIA card. The Mac ports that exist are an engine without a UI, or a UI without covers. I wanted one command that turns my MacBook Air into the whole studio.
 
 ## Install
 
@@ -24,7 +24,7 @@ uvx songforge
 
 That is the whole install. The first run installs the MLX engine into its own environment under `~/.songforge`, downloads 10.4 GB of weights, verifies their hashes and opens the studio at http://127.0.0.1:7860. Covers download another 2.8 GB the first time you use them.
 
-Needs an Apple Silicon Mac (M1 or later) on macOS 14.2 or later (26.2 or later on M5), [uv](https://docs.astral.sh/uv/), git, `brew install ffmpeg` for MP3 export and covers, and about 15 GB of free disk. The engine process peaked at 10.5 GiB in my runs on a 24 GB Mac. A 16 GB Mac should fit it with other apps closed, but I have not measured one.
+Needs an Apple Silicon Mac (M1 or later) on macOS 14.2 or later (26.2 or later on M5), [uv](https://docs.astral.sh/uv/), git, `brew install ffmpeg` for MP3 export and covers, and about 15 GB of free disk. The engine process peaked at 10.8 GiB in my runs on a 24 GB Mac. A 16 GB Mac should fit it with other apps closed, but I have not measured one.
 
 From source:
 
@@ -76,14 +76,14 @@ engine child process (mlx-Yue in its own uv env, Python 3.12, MLX 0.32.2)
 
 ## Compared to
 
-| Project | Platform | UI | Covers | Queue, MP3, CLI | What it lacks |
-|---|---|---|---|---|---|
-| [Suno](https://suno.com) | Cloud | Web | Yes | Yes | Local use. $8 or $24 a month, songs live on their servers |
-| [YuE2-Studio](https://github.com/timoncool/YuE2-Studio) | Windows, NVIDIA 6 GB+ | Desktop app | Yes | Partly | Mac support |
-| [ace-step-ui](https://github.com/fspecii/ace-step-ui) | NVIDIA CUDA | Web | Yes (ACE-Step) | Yes | Mac support. Last commit 2026-06-27. Uses ACE-Step, not YuE2 |
-| [YuE2Mac](https://github.com/arinltte/YuE2Mac) | Apple Silicon, MLX | Native macOS app | No | No | Covers, library queue, MP3 export, CLI, published timings |
-| [mlx-Yue](https://github.com/vanch007/mlx-Yue) | Apple Silicon, MLX | None (CLI, Python API) | Yes (CLI) | CLI only | A studio. songforge uses it as the engine |
-| **songforge** | Apple Silicon, MLX | Web, one command | Yes | Yes | Windows and Linux. Speed is bound by your Mac's GPU |
+| Project | Runs on | Interface | Covers | Gap for a Mac user |
+|---|---|---|---|---|
+| [Suno](https://suno.com) | Cloud | Web | Yes | Not local. $8 a month (Pro) or $24 (Premier), songs are made on their servers |
+| [YuE2-Studio](https://github.com/timoncool/YuE2-Studio) | Windows 10/11 x64, 6 GB+ GPU | Desktop app | Yes | No macOS build |
+| [ace-step-ui](https://github.com/fspecii/ace-step-ui) | NVIDIA GPU listed as a requirement | Web | Yes (ACE-Step) | No Apple GPU path documented. Last commit 2026-06-27. Uses ACE-Step, not YuE2 |
+| [YuE2Mac](https://github.com/arinltte/YuE2Mac) | Apple Silicon, MLX | Native macOS app | No | No covers, no CLI, no published generation times |
+| [mlx-Yue](https://github.com/vanch007/mlx-Yue) | Apple Silicon, MLX | CLI and Python API | Yes | An engine, not a studio. songforge runs it |
+| **songforge** | Apple Silicon, MLX | Browser studio, CLI, HTTP API | Yes | Mac only. Speed is bound by the Mac's GPU |
 
 ## Commands
 
@@ -114,36 +114,51 @@ HTTP API, used by the studio and handy for scripts: `POST /api/songs`, `GET /api
 
 ## Benchmark
 
-`songforge bench` times one song end to end and prints wall time, real-time factor (wall time divided by audio length, lower is faster), peak RSS and peak footprint. MLX allocates most of its memory as Metal buffers that RSS does not count, so the footprint is the number that matters. RSS stayed under 3.6 GB in every run while the footprint reached 10.5 GiB.
+`songforge bench` times one song end to end and prints wall time, real-time factor (wall time divided by audio length, lower is faster), peak RSS and peak footprint. MLX allocates most of its memory as Metal buffers that RSS does not count, so the footprint is the number that matters. RSS stayed under 5 GiB in every run while the footprint reached 10.8 GiB.
 
-Every generation made for this README and the listening page, one completed run each, MacBook Air M5 with 24 GB:
+Output of `songforge bench` on the idle Mac:
+
+```
+engine            mlx (YuE2-3B, AR 8-bit)
+mode              fast (8 steps), seed 42
+wall time         5m 59s
+audio length      2m 53s
+real-time factor  2.081 (wall / audio, lower is faster)
+peak RSS          4.7 GiB
+peak footprint    10.8 GiB
+machine           Apple M5 24 GB, macOS 26.6
+```
+
+Every generation made for this README and the listening page, one completed run each, same MacBook Air M5 with 24 GB:
 
 | Track | Mode | Audio | Wall time | Real-time factor | Peak footprint |
 |---|---|---|---|---|---|
+| `songforge bench` (English pop rock, seed 42) | Fast | 2:53 | 5 min 59 s | 2.08 | 10.8 GiB |
+{{EXTRA_ROWS}}
 | Tonight Awake (official YuE2 prompt, City Pop) | Fast | 2:59 | 9 min 28 s | 3.18 | 10.5 GiB |
-| Hold On (English pop rock) | Fast | 2:53 | 10 min 28 s | 3.64 | not recorded[^2] |
+| Hold On (the bench song, first run) | Fast | 2:53 | 10 min 28 s | 3.64 | not recorded[^2] |
 | Night Drive (synthwave, instrumental) | Fast | 1:10 | 3 min 59 s | 3.41 | 10.4 GiB |
 | Carry Me Home (acoustic folk) | HQ | 2:20 | 14 min 38 s | 6.27 | 10.8 GiB |
 | Jingle Bells, heavy metal cover | Fast | 1:03 | 2 min 13 s | 2.11 | 10.5 GiB |
 | Auld Lang Syne, jazz-funk cover | Fast | 0:51 | 1 min 35 s | 1.86 | 10.5 GiB |
 | Engine smoke test, 30 s cap, supplied score | Fast | 0:22 | 3 min 13 s | 8.69 | 8.9 GiB |
 
-Where the time goes in the 2:59 song: score planning 108 s (1,919 tokens at 17.7 per second), token generation 219 s (4,470 tokens at 20.4 per second), acoustic synthesis 204 s, VAE decode 27 s, process start, model load and export about 10 s. The cover spent 24 s transcribing, 54 s on tokens, 37 s on synthesis and 11 s on decode.
+How busy the Mac was, from load-average samples on its 10 cores: the smoke test and the first run of the bench song shared it with four other builds compiling and running local models (samples between 30 and 140). Night Drive, Tonight Awake and the Jingle Bells cover ran under lighter load (samples of 15 to 37). The bench run, the end of the HQ song and the Auld Lang Syne cover had it nearly idle (samples of 3).
 
-The first two songs and the smoke test ran while four other builds were compiling and running local models on the same Mac (load average between 30 and 140), so their times are pessimistic. Later runs had the machine mostly to themselves.
+Where the time goes in the bench song: score planning 40 s (1,651 tokens at 41 per second), token generation 137 s (4,314 tokens at 31.5 per second), acoustic synthesis 163 s, VAE decode 17 s. Under load the same stages took 139 s, 267 s, 172 s and 27 s: the token stages suffer most from a busy machine. The HQ song shared the GPU with a lyric-writer test during its token stage. The Jingle Bells cover spent 24 s transcribing, 54 s on tokens, 37 s on synthesis and 11 s on decode.
 
 [^2]: This song ran before songforge recorded the footprint. Its peak RSS was 3.5 GB.
 
 ## Limits and FAQ
 
 - **Apple Silicon only.** The engine is MLX. There is no Intel, Windows or Linux path.
-- **It is not fast on an Air.** A 3-minute song took 9 to 11 minutes in Fast mode on a MacBook Air M5, 3.2 to 3.6 times real time. HQ mode runs 32 acoustic steps instead of 8, which made the acoustic stage about 3 times slower per second of audio. A 2:20 HQ song took 14 min 38 s. The GPU does the work, so a Mac with more GPU cores should be faster, but this is the only Mac I measured. Queue a few songs and come back.
+- **It is not fast on an Air.** A 3-minute song took 6 minutes in Fast mode on an idle MacBook Air M5 (2.1 times real time) and 9 to 10.5 minutes while other heavy work ran. HQ mode runs 32 acoustic steps instead of 8, which made the acoustic stage about 3 times slower per second of audio. A 2:20 HQ song took 14 min 38 s. The GPU does the work, so a Mac with more GPU cores should be faster, but this is the only Mac I measured. Queue a few songs and come back.
 - **One song at a time.** Jobs queue. Two YuE2 processes would not fit in memory on most Macs.
 - **Length is decided by the model.** The length cap stops token generation, it does not stretch a short song. A capped song is marked in the library.
 - **Instrumental is a strong hint, not a switch.** songforge adds `instrumental, no vocals` and replaces the lyrics with section tags. YuE2 can still hum.
 - **Covers follow the melody, not the voice.** A cover re-sings the transcribed melody. It does not clone the original singer, keep the original backing track or align every syllable.
 - **Covers of copyrighted songs.** Transcribing a melody does not change who owns it. Use material you have the rights to.
-- **Memory.** Expect a peak process footprint around 10.5 GiB during a song. Quit other local model servers first on a 16 GB Mac.
+- **Memory.** Expect a peak process footprint of 10.4 to 10.8 GiB during a song. Quit other local model servers first on a 16 GB Mac.
 - **Where are my files?** `~/.songforge/songs/<id>/` has `audio.flac`, `audio.mp3`, `score.abc` and the engine log. `songforge doctor` shows disk use.
 - **Uninstall.** `rm -rf ~/.songforge`.
 
@@ -153,4 +168,4 @@ The first two songs and the smoke test ran while four other builds were compilin
 
 Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md). Benchmarks from other Macs are especially useful: run `songforge bench --json` and open an issue.
 
-[^1]: Measured 2026-09-30, one completed run per track with the seed shown, no picking between takes. MacBook Air M5, 24 GB, macOS 26.6. YuE2-3B through mlx-Yue 9253ed1 with the 8-bit AR model, Fast mode (8 acoustic steps). Prompt: the official YuE2 `tonight_awake` example (City Pop, Mandarin lyrics, seed 12300). Wall clock from job start to finished FLAC, including model load, score planning (108 s), token generation (219 s), acoustic synthesis (204 s) and VAE decode (27 s). The same Mac was running other builds at the time. An English pop rock song (2:53, seed 42) took 10 minutes 28 seconds while that load was heavier. HQ mode (32 steps): a 2:20 acoustic folk song (seed 1234) took 14 minutes 38 seconds, with acoustic synthesis at 496 s. A lyric-writer test used the same GPU during its token stage.
+[^1]: Measured 2026-09-30 with `songforge bench` (n=1): English pop rock, seed 42, the style and lyrics built into the bench command, YuE2-3B through mlx-Yue 9253ed1 with the 8-bit AR model, Fast mode (8 acoustic steps). MacBook Air M5, 24 GB, macOS 26.6, no other heavy work running. Wall clock from process start to finished FLAC, including model load, score planning (40 s), token generation (137 s), acoustic synthesis (163 s) and VAE decode (17 s). The same request took 10 minutes 28 seconds earlier in the day while four other builds were compiling and running local models on the same Mac. HQ mode (32 steps): a 2:20 acoustic folk song (seed 1234) took 14 minutes 38 seconds under that load, with acoustic synthesis at 496 s.
