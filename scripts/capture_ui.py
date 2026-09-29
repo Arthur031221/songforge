@@ -23,7 +23,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parent.parent
 DEMO = ROOT / "demo"
 URL = os.environ.get("SONGFORGE_URL", "http://127.0.0.1:7860")
-SIZE = {"width": 1440, "height": 900}
+SIZE = {"width": 1440, "height": 1080}
 
 STYLE = "indie pop, warm female vocal, jangly electric guitar, summer night, 112 BPM"
 LYRICS = """[Verse]

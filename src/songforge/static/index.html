@@ -69,7 +69,8 @@ main { max-width: 1320px; margin: 0 auto; padding: 24px 28px; }
 .split { display: grid; grid-template-columns: 430px 1fr; gap: 24px; align-items: start; }
 @media (max-width: 980px) { .split { grid-template-columns: 1fr; } header { gap: 14px; padding: 12px 16px; } main { padding: 16px; } }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
-.panel.sticky { position: sticky; top: 76px; }
+.panel.sticky { position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 980px) { .panel.sticky { position: static; max-height: none; } }
 .panel h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: -0.2px; }
 .sub { color: var(--muted); margin: 0 0 16px; font-size: 13px; }
 .field { margin-bottom: 16px; }
@@ -80,7 +81,7 @@ input[type=text], input[type=number], textarea, select {
   transition: border-color 0.15s;
 }
 textarea { resize: vertical; min-height: 84px; }
-#lyrics, #cv-lyrics { min-height: 210px; font-family: var(--font); line-height: 1.55; }
+#lyrics, #cv-lyrics { min-height: 180px; font-family: var(--font); line-height: 1.55; }
 input:focus, textarea:focus, select:focus { border-color: #ff4f8b88; box-shadow: 0 0 0 3px #ff4f8b1c; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .chip {
@@ -94,7 +95,7 @@ input:focus, textarea:focus, select:focus { border-color: #ff4f8b88; box-shadow:
 .seg button { flex: 1; border: 0; background: transparent; padding: 7px 8px; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: 13px; }
 .seg button small { display: block; font-weight: 500; font-size: 11px; color: var(--faint); }
 .seg button.active { background: var(--card-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
-.toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; color: var(--text); font-weight: 600; font-size: 13px; }
+.toggle, .field > label.toggle { display: flex; justify-content: flex-start; align-items: center; gap: 10px; cursor: pointer; user-select: none; color: var(--text); font-weight: 600; font-size: 13px; text-transform: none; letter-spacing: 0; margin: 0; }
 .toggle input { display: none; }
 .switch { width: 38px; height: 22px; border-radius: 999px; background: var(--line-2); position: relative; transition: background 0.2s; flex: none; }
 .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
@@ -108,6 +109,7 @@ input:focus, textarea:focus, select:focus { border-color: #ff4f8b88; box-shadow:
   border: 1px solid var(--line-2); background: var(--card-2); border-radius: 11px; padding: 9px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
 }
 .btn:hover { border-color: #ff4f8b77; }
+a.btn { text-decoration: none; color: inherit; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.small { padding: 5px 10px; font-size: 12.5px; border-radius: 9px; }
 .btn.ghost { background: transparent; }
@@ -191,7 +193,7 @@ input:focus, textarea:focus, select:focus { border-color: #ff4f8b88; box-shadow:
 .steps { display: flex; gap: 8px; margin: 4px 0 16px; }
 .step { flex: 1; font-size: 12px; color: var(--faint); border-top: 3px solid var(--line); padding-top: 6px; }
 .step.on { color: var(--text); border-color: var(--accent); }
-.score-box { background: #f7f5ef; border-radius: 12px; padding: 8px; overflow: auto; max-height: 360px; }
+.score-box { background: #f7f5ef; color: #1b1b22; border-radius: 12px; padding: 8px; overflow: auto; max-height: 360px; }
 .score-box svg { max-width: 100%; }
 details summary { cursor: pointer; color: var(--muted); font-size: 12.5px; margin: 8px 0; }
 .abc-raw { font-family: var(--mono); font-size: 12px; min-height: 140px; }
@@ -443,7 +445,7 @@ const state = { songs: new Map(), status: null, tab: "create", mode: "fast", cvM
   upload: null, transcribeId: null, kindFilter: "", playing: null, openMenu: null, openLyrics: new Set() };
 const STAGES = { song: ["planning", "tokenizing", "synth", "render"], cover: ["transcribing", "tokenizing", "synth", "render"], transcribe: ["transcribing"] };
 const STAGE_NAMES = { transcribing: "Transcribing", planning: "Planning", tokenizing: "Tokenizing", synth: "Synth", render: "Render" };
-const STYLE_PRESETS = ["indie pop", "city pop", "synthwave", "lo-fi hip hop", "acoustic folk", "jazz ballad", "r&b", "heavy metal", "country", "female vocal", "male vocal", "upbeat", "melancholic", "120 BPM"];
+const STYLE_PRESETS = ["indie pop", "city pop", "synthwave", "lo-fi hip hop", "acoustic folk", "jazz ballad", "heavy metal", "female vocal", "male vocal", "120 BPM"];
 const TAGS = ["[Intro]", "[Verse]", "[Pre-Chorus]", "[Chorus]", "[Bridge]", "[Outro]"];
 const ICON_PLAY = '<svg class="play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
 const ICON_PAUSE = '<svg class="play" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
@@ -653,7 +655,7 @@ function renderAll() {
   if (state.tab === "library") {
     renderFeed($("#library-feed"), visible(list), "<strong>Nothing here</strong>Songs, covers and scores you make show up in the library.");
     const done = list.filter((s) => s.status === "done" && s.seconds); const total = done.reduce((a, s) => a + s.seconds, 0);
-    $("#lib-stats").innerHTML = `<span><b>${done.length}</b> tracks</span><span><b>${fmtTime(total)}</b> of music</span>`;
+    $("#lib-stats").innerHTML = `<span><b>${done.length}</b> ${done.length === 1 ? "track" : "tracks"}</span><span><b>${fmtTime(total)}</b> of music</span>`;
   }
   const queued = list.filter((s) => s.status === "queued").length; $("#queue-note").textContent = queued ? `${queued} queued, one renders at a time` : "";
   renderStatus(); requestAnimationFrame(paintWaves);
