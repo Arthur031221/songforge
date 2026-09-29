@@ -79,7 +79,15 @@ class MlxEngine(Engine):
         return path
 
     def _command(self, name: str, job_file: Path) -> list[str]:
-        return [str(self.paths.engine_python), "-P", "-u", str(RUNNER), name, "--job", str(job_file)]
+        return [
+            str(self.paths.engine_python),
+            "-P",
+            "-u",
+            str(RUNNER),
+            name,
+            "--job",
+            str(job_file),
+        ]
 
     def _run(self, name: str, job: dict, out: Path, emit: Emit) -> JobResult:
         self._require_ready()
