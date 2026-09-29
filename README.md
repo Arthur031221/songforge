@@ -144,6 +144,7 @@ Every generation made for this README and the listening page, one completed run 
 | `songforge bench` (English pop rock, seed 42) | Fast | 2:53 | 5 min 59 s | 2.08 | 10.8 GiB |
 | Sunrise on the Road (indie pop, lyrics from Write lyrics) | Fast | 2:36 | 4 min 42 s | 1.81 | 10.1 GiB |
 | Slow Burn (neo soul R&B) | Fast | 2:33 | 6 min 03 s | 2.37 | 10.4 GiB |
+| Porch Lights (indie pop, made while capturing the screenshots) | Fast | 1:00 | 1 min 17 s | 1.27 | 10.1 GiB |
 | Tonight Awake (official YuE2 prompt, City Pop) | Fast | 2:59 | 9 min 28 s | 3.18 | 10.5 GiB |
 | Hold On (the bench song, first run) | Fast | 2:53 | 10 min 28 s | 3.64 | not recorded[^2] |
 | Night Drive (synthwave, instrumental) | Fast | 1:10 | 3 min 59 s | 3.41 | 10.4 GiB |
