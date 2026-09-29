@@ -66,6 +66,28 @@
     "measured": "2026-09-30 01:08"
   },
   {
+    "id": "river-folk",
+    "kind": "song",
+    "title": "Carry Me Home",
+    "style": "English, acoustic folk, warm male vocal, fingerpicked acoustic guitar, soft cello, intimate, 84 BPM",
+    "lyrics": "[Verse]\nPaper lanterns on the water\nEvery light a little prayer\nMother humming to her daughter\nSummer thunder in the air\n\n[Chorus]\nCarry me home on the river\nCarry me home on the tide\nWhatever the years deliver\nI will have you by my side\n\n[Verse]\nFireflies above the reeds now\nWriting letters in the dark\nEvery wish is all we need now\nEvery ember is a spark\n\n[Chorus]\nCarry me home on the river\nCarry me home on the tide\nWhatever the years deliver\nI will have you by my side\n",
+    "instrumental": false,
+    "seed": 1234,
+    "mode": "hq",
+    "note": "HQ mode (32 acoustic steps).",
+    "audio": "audio/river-folk.mp3",
+    "source_audio": null,
+    "audio_seconds": 139.88,
+    "wall_seconds": 877.5,
+    "cli_wall_seconds": 1009.7,
+    "peak_rss_bytes": 2840395776,
+    "peak_footprint_bytes": 11603630416,
+    "truncated": false,
+    "mp3_bytes": 2239173,
+    "library_id": "15574ee54fef",
+    "measured": "2026-09-30 01:37"
+  },
+  {
     "id": "jingle-metal",
     "kind": "cover",
     "title": "Jingle Bells (heavy metal cover)",
@@ -86,5 +108,27 @@
     "mp3_bytes": 1012312,
     "library_id": "11004bfad1d6",
     "measured": "2026-09-30 01:22"
+  },
+  {
+    "id": "auld-jazz-funk",
+    "kind": "cover",
+    "title": "Auld Lang Syne (jazz-funk cover)",
+    "style": "jazz-funk, slap bass, Rhodes piano, tight horns, groovy drums, soulful female vocal, 100 BPM",
+    "lyrics": "[Verse]\nShould old acquaintance be forgot\nAnd never brought to mind\nShould old acquaintance be forgot\nAnd days of auld lang syne\n\n[Chorus]\nFor auld lang syne, my dear\nFor auld lang syne\nWe'll take a cup of kindness yet\nFor auld lang syne\n",
+    "instrumental": false,
+    "seed": 5,
+    "mode": "fast",
+    "note": "Source: Auld Lang Syne (traditional, public domain) rendered as plain piano.",
+    "audio": "audio/auld-jazz-funk.mp3",
+    "source_audio": "audio/auld-lang-syne-source.mp3",
+    "audio_seconds": 50.92,
+    "wall_seconds": 94.9,
+    "cli_wall_seconds": 96.4,
+    "peak_rss_bytes": 5679906816,
+    "peak_footprint_bytes": 11256502512,
+    "truncated": false,
+    "mp3_bytes": 815704,
+    "library_id": "0f9fd003a571",
+    "measured": "2026-09-30 01:39"
   }
 ]
