@@ -81,7 +81,12 @@ class FakeEngine(Engine):
         path = out / "engine-audio.wav"
         write_tone(path, self.seconds, seed=int(job.get("seed", 0)))
         return JobResult(
-            audio=path, abc=abc, seconds=self.seconds, wall_seconds=0.01, peak_rss_bytes=50_000_000
+            audio=path,
+            abc=abc,
+            seconds=self.seconds,
+            wall_seconds=0.01,
+            peak_rss_bytes=50_000_000,
+            peak_footprint_bytes=60_000_000,
         )
 
 

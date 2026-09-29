@@ -300,6 +300,7 @@ def make(demo: dict) -> dict:
         "wall_seconds": round(result["wall_seconds"], 1),
         "cli_wall_seconds": round(outer, 1),
         "peak_rss_bytes": result["peak_rss_bytes"],
+        "peak_footprint_bytes": result.get("peak_footprint_bytes"),
         "truncated": result["truncated"],
         "mp3_bytes": size,
         "library_id": result["id"],

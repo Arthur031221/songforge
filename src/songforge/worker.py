@@ -13,6 +13,7 @@ from . import audio, config
 from .db import Store
 from .engine.base import Cancelled, Engine, EngineError, JobResult, ProgressEvent
 from .events import Broker
+from .lock import EngineLock
 
 log = logging.getLogger("songforge.worker")
 
@@ -207,7 +208,16 @@ class Worker:
             self.store.update(song_id, **fields)
             self.broker.publish("progress", {"id": song_id, **fields})
 
+        lock = EngineLock(self.paths.home / "engine.lock")
         try:
+            if not lock.try_acquire():
+                self.store.update(song_id, detail="Waiting for another songforge job to finish")
+                self._publish(song_id)
+                while not lock.try_acquire():
+                    if self.engine._cancel.is_set():
+                        raise Cancelled("Cancelled")
+                    time.sleep(1)
+                started = time.perf_counter()
             job = build_job(song)
             if song["kind"] == "transcribe":
                 result = self.engine.transcribe(job, out, emit)
@@ -228,6 +238,7 @@ class Worker:
                 song_id, status="failed", error=f"{type(error).__name__}: {error}", detail=""
             )
         finally:
+            lock.release()
             self.current = None
 
     def _store_result(self, song: dict, out: Path, result: JobResult, wall_ms: int) -> None:
@@ -239,6 +250,7 @@ class Worker:
             "progress": 1.0,
             "wall_ms": wall_ms,
             "peak_rss": result.peak_rss_bytes,
+            "peak_footprint": result.peak_footprint_bytes,
             "abc": result.abc or song.get("abc") or "",
         }
         if fields["abc"]:

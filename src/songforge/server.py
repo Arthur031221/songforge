@@ -20,6 +20,7 @@ from . import __version__, audio, config, lyrics
 from .db import Store
 from .engine import Engine
 from .events import Broker, format_sse
+from .lock import engine_busy
 from .worker import Worker, public
 
 STATIC = Path(__file__).with_name("static")
@@ -90,7 +91,8 @@ def check_task(task: str) -> str:
 def create_app(paths, engine: Engine, *, start_worker: bool = True) -> FastAPI:
     paths.ensure()
     store = Store(paths.db)
-    store.recover()
+    if not engine_busy(paths.home / "engine.lock"):
+        store.recover()
     broker = Broker()
     worker = Worker(store, engine, paths, broker)
     lyric_cache: dict = {"at": 0.0, "value": None}

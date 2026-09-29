@@ -755,8 +755,8 @@ $("#cover-form").addEventListener("submit", async (ev) => {
 // Live updates ------------------------------------------------------------------------
 function connect() {
   const es = new EventSource("/api/events");
-  es.addEventListener("song", (e) => upsert(JSON.parse(e.data)));
-  es.addEventListener("progress", (e) => patchProgress(JSON.parse(e.data)));
+  es.addEventListener("song", (e) => { state.lastEvent = Date.now(); upsert(JSON.parse(e.data)); });
+  es.addEventListener("progress", (e) => { state.lastEvent = Date.now(); patchProgress(JSON.parse(e.data)); });
   es.addEventListener("deleted", (e) => removeSong(JSON.parse(e.data).id));
   es.addEventListener("hello", () => { $("#status-text").textContent = "Connected"; loadStatus(); });
   es.onerror = () => { $("#status-dot").className = "dot bad"; $("#status-text").textContent = "Reconnecting"; };
@@ -765,6 +765,16 @@ async function init() {
   const tab = location.hash.slice(1); if (["create", "library", "cover"].includes(tab)) setTab(tab);
   try { (await api("/api/songs")).forEach((s) => state.songs.set(s.id, s)); } catch (e) {}
   renderAll(); await loadStatus(); connect(); setInterval(loadStatus, 30000);
+  // Jobs started from the CLI run in another process and do not reach this event stream.
+  setInterval(async () => {
+    const active = [...state.songs.values()].some((s) => s.status === "running" || s.status === "queued");
+    if (!active && Date.now() - (state.lastPoll || 0) < 20000) return;
+    if (Date.now() - (state.lastEvent || 0) < 5000) return;
+    state.lastPoll = Date.now();
+    try { const list = await api("/api/songs"); const seen = new Set(list.map((s) => s.id));
+      list.forEach((s) => { const old = state.songs.get(s.id); if (!old || old.status !== s.status || old.progress !== s.progress || old.detail !== s.detail) upsert(s); });
+      [...state.songs.keys()].forEach((id) => { if (!seen.has(id)) removeSong(id); }); } catch (e) {}
+  }, 3000);
 }
 init();
 </script>

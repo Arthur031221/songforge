@@ -66,3 +66,24 @@ def test_delete(paths):
     a = make(store)
     assert store.delete(a["id"])
     assert not store.delete(a["id"])
+
+
+def test_migration_adds_new_columns(paths):
+    import sqlite3
+
+    conn = sqlite3.connect(paths.db)
+    conn.execute(
+        "CREATE TABLE songs (id TEXT PRIMARY KEY, kind TEXT, title TEXT, style TEXT, "
+        "lyrics TEXT, instrumental INTEGER DEFAULT 0, mode TEXT, seed INTEGER, "
+        "max_seconds INTEGER, status TEXT DEFAULT 'queued', stage TEXT DEFAULT '', "
+        "detail TEXT DEFAULT '', progress REAL DEFAULT 0, seconds REAL, wall_ms INTEGER, "
+        "peak_rss INTEGER, path TEXT, abc TEXT, source_name TEXT, source_path TEXT, "
+        "task TEXT, peaks TEXT, truncated INTEGER DEFAULT 0, error TEXT, "
+        "created_at REAL NOT NULL, started_at REAL, finished_at REAL)"
+    )
+    conn.commit()
+    conn.close()
+    store = Store(paths.db)
+    row = make(store)
+    store.update(row["id"], peak_footprint=123)
+    assert store.get(row["id"])["peak_footprint"] == 123

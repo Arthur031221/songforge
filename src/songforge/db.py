@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS songs (
     seconds REAL,
     wall_ms INTEGER,
     peak_rss INTEGER,
+    peak_footprint INTEGER,
     path TEXT,
     abc TEXT,
     source_name TEXT,
@@ -44,6 +45,8 @@ CREATE INDEX IF NOT EXISTS songs_status ON songs(status);
 CREATE INDEX IF NOT EXISTS songs_created ON songs(created_at);
 """
 
+MIGRATIONS = [("peak_footprint", "INTEGER")]
+
 ACTIVE = ("queued", "running")
 FINAL = ("done", "failed", "cancelled")
 
@@ -56,6 +59,7 @@ _UPDATABLE = {
     "seconds",
     "wall_ms",
     "peak_rss",
+    "peak_footprint",
     "path",
     "abc",
     "peaks",
@@ -79,7 +83,15 @@ class Store:
         with self._lock:
             self._conn.execute("PRAGMA journal_mode=WAL")
             self._conn.executescript(SCHEMA)
+            self._migrate()
             self._conn.commit()
+
+    def _migrate(self) -> None:
+        """Add columns introduced after a library was created."""
+        have = {row[1] for row in self._conn.execute("PRAGMA table_info(songs)")}
+        for name, decl in MIGRATIONS:
+            if name not in have:
+                self._conn.execute(f"ALTER TABLE songs ADD COLUMN {name} {decl}")
 
     def close(self) -> None:
         with self._lock:

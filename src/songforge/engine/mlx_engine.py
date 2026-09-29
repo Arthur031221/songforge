@@ -95,6 +95,7 @@ class MlxEngine(Engine):
             raise EngineNotReady("Covers need ffmpeg. Install it with: brew install ffmpeg")
         job_file = self._job_file(out, job)
         data = self.run_child(self._command(name, job_file), emit, out / "engine.log")
+        (out / "result.json").write_text(json.dumps(data, indent=2, default=str))
         return JobResult(
             audio=Path(data["audio"]) if data.get("audio") else None,
             abc=data.get("abc", ""),

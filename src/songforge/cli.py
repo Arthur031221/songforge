@@ -244,6 +244,7 @@ def _finish_job(song: dict, args) -> int:
         "seed": song["seed"],
         "mode": song["mode"],
         "peak_rss_bytes": song.get("peak_rss"),
+        "peak_footprint_bytes": song.get("peak_footprint"),
         "truncated": song.get("truncated"),
         "path": song.get("path"),
         "out": target,
@@ -252,7 +253,8 @@ def _finish_job(song: dict, args) -> int:
 
     text = (
         f"Done: {song['title']}  {fmt_duration(song.get('seconds'))} of audio in "
-        f"{fmt_duration(data['wall_seconds'])}, peak RSS {fmt_bytes(song.get('peak_rss'))}\n"
+        f"{fmt_duration(data['wall_seconds'])}, peak memory "
+        f"{fmt_bytes(song.get('peak_footprint') or song.get('peak_rss'))}\n"
         f"  {target or song.get('path')}"
     )
     out(args, data, text)
