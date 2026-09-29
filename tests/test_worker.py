@@ -161,3 +161,9 @@ def test_worker_background_thread(paths, fake_engine, kind):
         assert store.get(row["id"])["status"] == "done"
     finally:
         worker.stop()
+
+
+def test_planning_progress_grows_without_total():
+    a = overall("song", ProgressEvent("planning", done=100))
+    b = overall("song", ProgressEvent("planning", done=900))
+    assert 0 < a < b < 0.10

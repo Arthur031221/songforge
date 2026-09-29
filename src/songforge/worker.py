@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import shutil
 import threading
 import time
@@ -27,6 +28,9 @@ WEIGHTS = {
     },
     "transcribe": {"transcribing": 1.0},
 }
+
+# Typical token counts for stages that do not know their total in advance.
+OPEN_ENDED = {"planning": 700.0, "transcribing": 400.0}
 
 INSTRUMENTAL_LYRICS = "[Intro]\n\n[Verse]\n\n[Chorus]\n\n[Outro]\n"
 
@@ -86,6 +90,9 @@ def overall(kind: str, event: ProgressEvent) -> float:
             within = 0.0
             if event.total:
                 within = min(1.0, float(event.done) / float(event.total))
+            elif event.done and stage in OPEN_ENDED:
+                # No known total: fill toward the end of the stage without reaching it.
+                within = 1 - math.exp(-float(event.done) / OPEN_ENDED[stage])
             return round(min(0.99, before + share * within), 3)
         before += share
     return -1
