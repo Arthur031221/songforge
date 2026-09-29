@@ -19,10 +19,18 @@ Suno is good and costs $8 a month (Pro) or $24 a month (Premier), and every song
 ## Install
 
 ```bash
-uvx songforge
+uv tool install git+https://github.com/Arthur031221/songforge
 ```
 
-That is the whole install. The first run installs the MLX engine into its own environment under `~/.songforge`, downloads 10.4 GB of weights, verifies their hashes and opens the studio at http://127.0.0.1:7860. Covers download another 2.8 GB the first time you use them.
+Or run it once without installing anything:
+
+```bash
+uvx --from git+https://github.com/Arthur031221/songforge songforge
+```
+
+songforge is not on PyPI yet, so plain `uvx songforge` does not work today. If that changes, the same command will read from PyPI instead.
+
+Either way, the first run installs the MLX engine into its own environment under `~/.songforge`, downloads 10.4 GB of weights, verifies their hashes and opens the studio at http://127.0.0.1:7860. Covers download another 2.8 GB the first time you use them.
 
 Needs an Apple Silicon Mac (M1 or later) on macOS 14.2 or later (26.2 or later on M5), [uv](https://docs.astral.sh/uv/), git, `brew install ffmpeg` for MP3 export and covers, and about 15 GB of free disk. The engine process peaked at 10.8 GiB in my runs on a 24 GB Mac. A 16 GB Mac should fit it with other apps closed, but I have not measured one.
 
