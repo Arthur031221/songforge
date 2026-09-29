@@ -57,3 +57,16 @@ def test_studio_start_does_not_fail_a_job_running_elsewhere(paths, fake_engine):
     with TestClient(create_app(paths, fake_engine, start_worker=False)) as client:
         assert client.get(f"/api/songs/{row['id']}").json()["status"] == "running"
     holder.release()
+
+
+def test_bench_refuses_while_engine_is_busy(paths, fake_engine):
+    import pytest
+
+    from songforge.bench import run_bench
+    from songforge.engine.base import EngineError
+
+    holder = EngineLock(paths.home / "engine.lock")
+    assert holder.try_acquire()
+    with pytest.raises(EngineError, match="Another songforge job"):
+        run_bench(paths, fake_engine, echo=lambda m: None)
+    holder.release()

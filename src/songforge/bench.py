@@ -8,7 +8,8 @@ import time
 from pathlib import Path
 
 from . import config
-from .engine.base import Engine, ProgressEvent
+from .engine.base import Engine, EngineError, ProgressEvent
+from .lock import EngineLock
 from .worker import build_job, describe
 
 BENCH_STYLE = (
@@ -99,9 +100,15 @@ def run_bench(
             last["stage"] = event.stage
             echo(f"  {describe(event)}")
 
-    started = time.perf_counter()
-    result = engine.generate(job, out, emit)
-    wall = time.perf_counter() - started
+    lock = EngineLock(paths.home / "engine.lock")
+    if not lock.try_acquire():
+        raise EngineError("Another songforge job is using the engine. Try again when it is done.")
+    try:
+        started = time.perf_counter()
+        result = engine.generate(job, out, emit)
+        wall = time.perf_counter() - started
+    finally:
+        lock.release()
     seconds = result.seconds or 0.0
     report = {
         "engine": engine.name,
