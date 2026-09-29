@@ -533,7 +533,7 @@ $("#create-form").addEventListener("submit", async (ev) => {
 });
 $("#write-btn").addEventListener("click", () => { $("#write-box").classList.toggle("hidden"); $("#write-topic").focus(); });
 async function writeLyrics() {
-  const btn = $("#write-go"); const err = $("#write-error"); err.classList.add("hidden"); btn.disabled = true; btn.textContent = "Writing...";
+  const btn = $("#write-go"); const err = $("#write-error"); err.classList.add("hidden"); btn.disabled = true; btn.textContent = "Writing, about a minute...";
   try { const r = await api("/api/lyrics", { method: "POST", body: JSON.stringify({ topic: $("#write-topic").value, style: $("#style").value }) }); $("#lyrics").value = r.lyrics; $("#write-box").classList.add("hidden"); }
   catch (e) { err.textContent = e.message; err.classList.remove("hidden"); }
   finally { btn.disabled = false; btn.textContent = "Write"; }

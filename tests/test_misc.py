@@ -33,18 +33,21 @@ def test_status_when_ollama_is_down(paths):
     assert lyrics.status(timeout=0.2)["available"] is False
 
 
-def test_write_uses_ollama(monkeypatch):
+def test_write_uses_ollama_structured_output(monkeypatch):
     seen = {}
+    reply = {
+        "sections": [
+            {"tag": "Verse", "lines": ["Rain on the window pane", "I hear you call my name"]},
+            {"tag": "chorus", "lines": ["Hold on", "  ", "Hold on tight"]},
+        ]
+    }
 
     class R:
         def raise_for_status(self):
             pass
 
         def json(self):
-            return {
-                "response": "[Verse]\nRain on the window pane\nI hear you call my name\n"
-                "[Chorus]\nHold on\n"
-            }
+            return {"message": {"content": json.dumps(reply)}}
 
     def post(url, json, timeout):
         seen.update(url=url, body=json)
@@ -52,9 +55,18 @@ def test_write_uses_ollama(monkeypatch):
 
     monkeypatch.setattr(httpx, "post", post)
     text = lyrics.write("rain", "indie pop")
-    assert text.startswith("[Verse]\nRain")
-    assert seen["url"].endswith("/api/generate")
-    assert seen["body"]["think"] is False and seen["body"]["model"] == config.lyrics_model()
+    assert text == (
+        "[Verse]\nRain on the window pane\nI hear you call my name\n\n[Chorus]\nHold on\nHold on tight\n"
+    )
+    assert seen["url"].endswith("/api/chat")
+    assert seen["body"]["format"]["required"] == ["sections"]
+    assert seen["body"]["model"] == config.lyrics_model()
+
+
+def test_from_json_falls_back_to_text():
+    chatty = "Sure, here you go.\n[Verse]\nLine one\nLine two\n[Chorus]\nHook\n"
+    assert lyrics.from_json(chatty) == "[Verse]\nLine one\nLine two\n\n[Chorus]\nHook\n"
+    assert lyrics.from_json("no tags at all") == ""
 
 
 def test_write_rejects_empty(monkeypatch):
@@ -63,7 +75,7 @@ def test_write_rejects_empty(monkeypatch):
             pass
 
         def json(self):
-            return {"response": "ok"}
+            return {"message": {"content": "ok"}}
 
     monkeypatch.setattr(httpx, "post", lambda *a, **k: R())
     with pytest.raises(lyrics.LyricsError):

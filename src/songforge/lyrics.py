@@ -2,20 +2,48 @@
 
 from __future__ import annotations
 
+import json
 import re
 
 import httpx
 
 from . import config
 
-PROMPT = """Write original song lyrics.
-Topic: {topic}
+SYSTEM = "You write song lyrics."
+
+PROMPT = """Write original song lyrics about: {topic}
 Style: {style}
-Rules:
-- Use only these section tags on their own lines: [Verse], [Chorus], [Bridge], [Outro].
-- Structure: [Verse], [Chorus], [Verse], [Chorus], [Bridge], [Chorus].
-- 4 lines per section, 6 to 10 syllables per line, simple words that are easy to sing.
-- No title, no notes, no markdown, no numbering. Output the lyrics only."""
+Sections in order: Verse, Chorus, Verse, Chorus, Bridge, Chorus.
+Four lines per section, two for the Bridge. Short lines, 6 to 10 syllables,
+simple words that are easy to sing."""
+
+# Structured output: the grammar leaves no room for commentary or visible reasoning.
+SCHEMA = {
+    "type": "object",
+    "properties": {
+        "sections": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 8,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "tag": {"type": "string", "enum": ["Verse", "Chorus", "Bridge", "Outro"]},
+                    "lines": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 6,
+                        "items": {"type": "string", "maxLength": 80},
+                    },
+                },
+                "required": ["tag", "lines"],
+            },
+        }
+    },
+    "required": ["sections"],
+}
+
+TAG = re.compile(r"\[?\(?(verse|chorus|bridge|outro|intro|pre-chorus)[^\]\)]*\]?\)?:?", re.I)
 
 
 class LyricsError(RuntimeError):
@@ -42,40 +70,60 @@ def status(timeout: float = 1.5) -> dict:
 
 
 def clean(text: str) -> str:
+    """Keep the lyrics, drop anything a chatty model wrote before or around them."""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
-    text = text.replace("**", "").replace("```", "")
-    lines = []
-    for raw in text.splitlines():
-        line = raw.strip()
-        tag = re.fullmatch(
-            r"\[?\(?(verse|chorus|bridge|outro|intro|pre-chorus)[^\]\)]*\]?\)?:?", line, flags=re.I
-        )
+    text = text.replace("**", "").replace("```", "").replace("#", "")
+    raw = [line.strip() for line in text.splitlines()]
+    first = next((i for i, line in enumerate(raw) if TAG.fullmatch(line)), None)
+    if first is None:
+        return ""
+    lines: list[str] = []
+    for line in raw[first:]:
+        tag = TAG.fullmatch(line)
         if tag:
-            word = tag.group(1).title()
             if lines and lines[-1] != "":
                 lines.append("")
-            lines.append(f"[{word}]")
-        elif line:
+            lines.append(f"[{tag.group(1).title()}]")
+        elif line and len(line) <= 80 and not line.lower().startswith(("note", "title")):
             lines.append(line)
     return "\n".join(lines).strip() + "\n"
 
 
-def write(topic: str, style: str, timeout: float = 120.0) -> str:
+def from_json(text: str) -> str:
+    """Turn the structured reply into tagged lyrics. Falls back to text cleanup."""
+    try:
+        data = json.loads(text)
+        sections = data["sections"]
+        blocks = []
+        for section in sections:
+            lines = [str(line).strip() for line in section["lines"] if str(line).strip()]
+            if lines:
+                blocks.append(f"[{str(section['tag']).title()}]\n" + "\n".join(lines))
+        return "\n\n".join(blocks) + "\n" if blocks else ""
+    except (ValueError, KeyError, TypeError):
+        return clean(text)
+
+
+def write(topic: str, style: str, timeout: float = 180.0) -> str:
     topic = topic.strip() or "a night drive with an old friend"
     body = {
         "model": config.lyrics_model(),
-        "prompt": PROMPT.format(topic=topic, style=style.strip() or "pop"),
+        "messages": [
+            {"role": "system", "content": SYSTEM},
+            {"role": "user", "content": PROMPT.format(topic=topic, style=style.strip() or "pop")},
+        ],
         "stream": False,
         "think": False,
-        "options": {"temperature": 0.8, "num_predict": 600},
+        "format": SCHEMA,
+        "options": {"temperature": 0.8, "num_predict": 900},
     }
     try:
-        response = httpx.post(f"{config.ollama_url()}/api/generate", json=body, timeout=timeout)
+        response = httpx.post(f"{config.ollama_url()}/api/chat", json=body, timeout=timeout)
         response.raise_for_status()
-        text = response.json().get("response", "")
+        text = response.json().get("message", {}).get("content", "")
     except httpx.HTTPError as error:
         raise LyricsError(f"Ollama request failed: {error}") from error
-    lyrics = clean(text)
-    if "[" not in lyrics or len(lyrics) < 40:
+    lyrics = from_json(text)
+    if lyrics.count("[") < 2 or len(lyrics) < 60:
         raise LyricsError("The lyric model returned no usable lyrics. Try again.")
     return lyrics
