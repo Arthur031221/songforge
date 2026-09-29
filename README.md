@@ -122,7 +122,7 @@ HTTP API, used by the studio and handy for scripts: `POST /api/songs`, `GET /api
 
 ## Benchmark
 
-`songforge bench` times one song end to end and prints wall time, real-time factor (wall time divided by audio length, lower is faster), peak RSS and peak footprint. MLX allocates most of its memory as Metal buffers that RSS does not count, so the footprint is the number that matters. RSS stayed under 5 GiB in every run while the footprint reached 10.8 GiB.
+`songforge bench` times one song end to end and prints wall time, real-time factor (wall time divided by audio length, lower is faster), peak RSS and peak footprint. MLX allocates most of its memory as Metal buffers that RSS does not count, so the footprint is the number that matters. Peak RSS ranged from 2.6 to 5.3 GiB across the runs below while the footprint reached 10.8 GiB.
 
 Output of `songforge bench` on the idle Mac:
 
