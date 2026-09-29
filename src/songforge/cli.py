@@ -142,7 +142,8 @@ def cmd_doctor(args) -> int:
         f"{mark(st['installed'])} engine installed (mlx-Yue {config.MLX_ENGINE_COMMIT[:7]})",
         f"{mark(st['models'])} song weights"
         + ("" if st["models"] else f"  missing: {', '.join(st['missing'])}"),
-        f"{mark(st['covers'])} cover weights (downloaded on first cover)",
+        f"{mark(st['covers'])} cover weights"
+        + (" (SheetSage2, MERT-v2)" if st["covers"] else " (downloaded on first cover)"),
         f"{mark(bool(report['ffmpeg']))} ffmpeg (MP3 export and covers)",
         f"{mark(report['lyrics']['available'])} lyric writer ({report['lyrics']['model']} via Ollama)"
         + ("" if report["lyrics"]["available"] else f"  {report['lyrics'].get('reason', '')}"),
