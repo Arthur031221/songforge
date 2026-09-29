@@ -267,6 +267,7 @@ def transcribe(job: dict, out: Path) -> dict:
             job["source"],
             out / "transcription",
             cache_dir=job.get("cache_dir"),
+            offline=bool(job.get("covers_cached")),
             task=job.get("task", "melody-full"),
             progress=progress,
             cancelled=cancelled,

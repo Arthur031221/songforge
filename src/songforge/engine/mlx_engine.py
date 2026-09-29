@@ -71,6 +71,7 @@ class MlxEngine(Engine):
             "vae_dir": str(self.paths.vae_dir),
             "cache_dir": str(self.paths.hf_cache),
             "precision": "8bit",
+            "covers_cached": self.covers_ready(),
             "out": str(out),
             **payload,
         }
