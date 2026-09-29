@@ -117,16 +117,11 @@ def gif() -> None:
         page.click("#mode-seg button[data-mode=hq]")
         snap(page)
         page.click("#mode-seg button[data-mode=fast]")
-        page.click("#create-btn")
-        page.wait_for_timeout(1500)
-        snap(page, 3)
+        snap(page)
+        # Watch the job that is already rendering instead of adding one to the queue.
         for _ in range(6):
             page.wait_for_timeout(2500)
             snap(page)
-        cancel = page.query_selector("#create-feed .card [data-act=cancel]")
-        if cancel:
-            cancel.click()
-            page.wait_for_timeout(1500)
         page.click("nav button[data-tab=library]")
         page.wait_for_timeout(700)
         snap(page, 2)

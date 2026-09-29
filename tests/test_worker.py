@@ -167,3 +167,25 @@ def test_planning_progress_grows_without_total():
     a = overall("song", ProgressEvent("planning", done=100))
     b = overall("song", ProgressEvent("planning", done=900))
     assert 0 < a < b < 0.10
+
+
+def test_engine_flac_is_linked_not_copied(paths, fake_engine, monkeypatch):
+    from songforge import audio
+
+    monkeypatch.setattr(audio, "ffmpeg", lambda: None)
+    store = Store(paths.db)
+    worker = Worker(store, fake_engine, paths)
+
+    def flac_result(job, out, emit):
+        src = out / "engine" / "audio.flac"
+        src.parent.mkdir(parents=True)
+        src.write_bytes(b"fLaC fake")
+        return JobResult(audio=src, abc="X:1", seconds=2.0)
+
+    monkeypatch.setattr(fake_engine, "generate", flac_result)
+    row = store.create(**song_row())
+    worker.run_once()
+    done = store.get(row["id"])
+    assert done["status"] == "done", done["error"]
+    linked = paths.songs / row["id"] / "audio.flac"
+    assert linked.stat().st_ino == (paths.songs / row["id"] / "engine" / "audio.flac").stat().st_ino

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 import shutil
 import threading
 import time
@@ -265,7 +266,11 @@ class Worker:
             src = Path(result.audio)
             if src.suffix.lower() == ".flac":
                 if src != flac:
-                    shutil.copyfile(src, flac)
+                    flac.unlink(missing_ok=True)
+                    try:
+                        os.link(src, flac)  # same file, no second copy on disk
+                    except OSError:
+                        shutil.copyfile(src, flac)
                 final = flac
             elif audio.ffmpeg():
                 final = audio.to_flac(src, flac)
