@@ -142,35 +142,38 @@ def skip_rehash_when_verified(model_dir: Path) -> bool:
 
 
 def relax_memory_guard() -> None:
-    """Keep the per-process budget, tolerate the warn pressure level of a busy laptop.
+    """Keep the per-process budget, stop only on sustained critical memory.
 
     Upstream stops at the first non-normal pressure sample and at 64 MiB of new
-    system-wide swap-out. With a browser and other apps open that fires before
-    any real risk. songforge stops on critical pressure, under 1 GiB available,
-    or real swap growth. SONGFORGE_STRICT_MEMORY=1 restores the upstream check.
+    system-wide swap-out. On a laptop with a browser and other apps open, other
+    processes trip both checks long before this job is at risk, and a song that
+    stops halfway is worse than one that finishes slowly. songforge keeps the
+    process footprint budget and stops when macOS reports critical pressure, or
+    less than 512 MiB available, for 10 seconds in a row.
+    SONGFORGE_STRICT_MEMORY=1 restores the upstream check.
     """
     if os.environ.get("SONGFORGE_STRICT_MEMORY") == "1":
         return
     from lyra import measure
 
+    sustained = 40  # samples, 0.25 s apart
+
     def check(self, sample):
-        if self._baseline is None:
-            self._baseline = sample
         footprint = sample["physical_footprint_bytes"]
         if footprint > self.memory_budget_gib * GIB:
             raise MemoryError(
                 f"Process footprint {footprint / GIB:.2f} GiB exceeds "
                 f"{self.memory_budget_gib:g} GiB budget"
             )
-        if sample["system_memory_pressure_level"] >= 4:
-            raise MemoryError("System memory pressure is critical")
-        if sample["system_available_bytes"] < 1 * GIB:
-            raise MemoryError("Less than 1 GiB of available system memory remains")
-        swapped = sample["system_swap_out_bytes"] - self._baseline["system_swap_out_bytes"]
-        growth = sample["system_swap_used_bytes"] - self._baseline["system_swap_used_bytes"]
-        if swapped > 1024 * MIB and growth > 1024 * MIB:
+        low = (
+            sample["system_memory_pressure_level"] >= 4
+            or sample["system_available_bytes"] < 512 * MIB
+        )
+        self._songforge_low = (getattr(self, "_songforge_low", 0) + 1) if low else 0
+        if self._songforge_low >= sustained:
             raise MemoryError(
-                f"Stopping: the system swapped {swapped / MIB:.0f} MiB during the job"
+                "macOS reported critical memory pressure for 10 seconds. "
+                "Close other apps or quit local model servers, then try again."
             )
 
     measure.GPUExecution._check_sample = check
@@ -199,7 +202,8 @@ def render(job: dict, out: Path, abc: str | None = None) -> dict:
         "cot": job.get("cot", "full"),
         "id": "song",
     }
-    if abc is not None:
+    abc = abc if abc is not None else job.get("abc")
+    if abc:
         request["abc"] = abc
     config = GenerationConfig(ode_steps=steps)
     skip_rehash_when_verified(Path(job["model_dir"]))

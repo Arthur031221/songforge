@@ -557,7 +557,7 @@ function cardHTML(s) {
   const playing = state.playing === s.id; const isDone = s.status === "done" && s.has_audio;
   const badges = [];
   if (s.kind === "cover") badges.push('<span class="badge cover">Cover</span>');
-  if (s.kind === "transcribe") badges.push('<span class="badge cover">Score</span>');
+  if (s.kind === "transcribe") badges.push('<span class="badge cover">Transcription</span>');
   if (s.kind !== "transcribe") badges.push(`<span class="badge ${s.mode === "hq" ? "hq" : ""}">${s.mode === "hq" ? "HQ 32" : "Fast 8"}</span>`);
   if (s.instrumental) badges.push('<span class="badge">Instrumental</span>');
   if (s.kind !== "transcribe") badges.push(`<span class="badge">seed ${s.seed}</span>`);

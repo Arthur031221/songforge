@@ -150,9 +150,9 @@ class Engine:
 
 
 def friendly_error(message: str, kind: str = "") -> str:
-    if kind == "MemoryError" or ("exceeds" in message and "GiB" in message):
+    if "exceeds" in message and "GiB" in message:
         return f"Out of memory budget: {message}. Close other apps or pick a shorter song."
-    if "ffmpeg" in message.lower():
+    if "ffmpeg" in message.lower() and "not found" in message.lower():
         return "ffmpeg is required for covers. Install it with: brew install ffmpeg"
     return message or kind or "Unknown engine error"
 
