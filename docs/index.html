@@ -80,7 +80,7 @@ footer { padding: 30px 0 50px; color: var(--faint); font-size: 13px; border-top:
   <div class="grid" id="songs"><div class="empty">Loading demos...</div></div>
 
   <h2>Covers</h2>
-  <p class="sub">The source is transcribed to a melody score, then sung in a new style with new or original lyrics. Both sources are public-domain melodies rendered as plain piano.</p>
+  <p class="sub">The source is transcribed to a melody score, then sung in a new style with new or original lyrics. Sources are public-domain melodies rendered as plain piano by a script in the repo, so no recording rights are involved.</p>
   <div id="covers"></div>
 
   <div class="license">
@@ -118,11 +118,14 @@ fetch("demos.json").then((r) => r.json()).then((demos) => {
       <div class="pair"><div class="side"><div class="label">Source</div><audio controls preload="none" src="${d.source_audio}"></audio></div>
       <div class="side"><div class="label">songforge cover</div><audio controls preload="none" src="${d.audio}"></audio></div></div>
       <p class="note" style="margin-bottom:0">${esc(d.note)} Cover time includes transcription.</p>${lyricsBlock(d)}</div>`).join("") || '<div class="empty">No covers yet.</div>';
-  const fast = songs.filter((d) => d.mode === "fast");
-  if (fast.length) {
-    const total = fast.reduce((a, d) => a + d.wall_seconds, 0), audio = fast.reduce((a, d) => a + d.audio_seconds, 0);
-    document.getElementById("facts").innerHTML = `<div><b>${took(total / fast.length)}</b>average Fast song</div><div><b>${fmt(audio / fast.length)}</b>average length</div><div><b>${demos.length}</b>tracks on this page</div><div><b>$0</b>per month</div>`;
-  }
+  const fast = songs.filter((d) => d.mode === "fast" && !d.instrumental).sort((a, b) => b.audio_seconds - a.audio_seconds);
+  const facts = [];
+  if (fast.length) facts.push(`<div><b>${took(fast[0].wall_seconds)}</b>for a ${fmt(fast[0].audio_seconds)} song with vocals (Fast)</div>`);
+  const hq = songs.find((d) => d.mode === "hq");
+  if (hq) facts.push(`<div><b>${took(hq.wall_seconds)}</b>for a ${fmt(hq.audio_seconds)} song in HQ</div>`);
+  if (covers.length) facts.push(`<div><b>${took(covers[0].wall_seconds)}</b>for a ${fmt(covers[0].audio_seconds)} cover, transcription included</div>`);
+  facts.push("<div><b>$0</b>per month</div>");
+  document.getElementById("facts").innerHTML = facts.join("");
   const dates = demos.map((d) => d.measured.slice(0, 10)); const day = dates.sort().at(-1);
   document.getElementById("method").textContent = `Method: every track was generated once with the seed shown, no cherry-picking across seeds. MacBook Air M5, 24 GB, macOS 26.6, YuE2-3B with the 8-bit AR model, mlx-Yue 9253ed1. Wall time is measured by songforge from job start to finished FLAC, including model load, score planning, token generation, acoustic synthesis and VAE decode. The machine was also running other workloads, so these times are conservative. Measured ${day}. MP3 at 128 kbps.`;
 }).catch(() => { document.getElementById("songs").innerHTML = '<div class="empty">Could not load demos.json.</div>'; });

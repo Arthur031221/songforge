@@ -102,7 +102,7 @@ DEMOS = [
         "seed": 42,
         "mode": "fast",
         "max_seconds": 240,
-        "note": "English pop rock with the lyrics from `songforge bench`.",
+        "note": "English pop rock with the lyrics from songforge bench.",
     },
     {
         "id": "tonight-awake",
