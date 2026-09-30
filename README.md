@@ -180,6 +180,12 @@ Where the time goes in the bench song: score planning 40 s (1,651 tokens at 41 p
 - **Where are my files?** `~/.songforge/songs/<id>/` has `audio.flac`, `audio.mp3`, `score.abc` and the engine log. `songforge doctor` shows disk use.
 - **Uninstall.** `rm -rf ~/.songforge`.
 
+## Related projects
+
+- [mlxtrace](https://github.com/Arthur031221/mlxtrace): Profiles the step timing of an MLX training run, useful if you fine-tune rather than run songforge's inference.
+- [snipmd](https://github.com/Arthur031221/snipmd): Another MLX app built the same way: one command, weights download once, everything stays local.
+- [inference-visually](https://github.com/Arthur031221/inference-visually): Explains the memory and throughput tradeoffs behind the MLX inference songforge's engine runs.
+
 ## License
 
 > **The app is MIT. The model is not.** songforge's code is MIT licensed. The YuE2 weights it downloads are licensed CC BY-NC 4.0 by their authors, which means non-commercial use. Songs you make with songforge are outputs of that model and follow its license. mlx-Yue is Apache-2.0. abcjs, bundled for score rendering, is MIT.
