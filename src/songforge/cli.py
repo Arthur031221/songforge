@@ -39,6 +39,16 @@ def fail(message: str, code: int = 1) -> int:
     return code
 
 
+def length_cap(value: str) -> int:
+    try:
+        seconds = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("must be an integer") from error
+    if not 20 <= seconds <= 360:
+        raise argparse.ArgumentTypeError("must be between 20 and 360 seconds")
+    return seconds
+
+
 def server_url(port: int) -> str | None:
     url = f"http://127.0.0.1:{port}"
     try:
@@ -457,7 +467,7 @@ def build_parser() -> argparse.ArgumentParser:
         p.add_argument("--seed", type=int, default=None, help="random seed (default random)")
         p.add_argument(
             "--max-seconds",
-            type=int,
+            type=length_cap,
             default=240,
             help="length cap in seconds, 20 to 360 (default 240)",
         )
@@ -492,7 +502,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode", choices=tuple(config.MODES), default="fast", help="fast or hq (default fast)"
     )
     bench.add_argument(
-        "--max-seconds", type=int, default=240, help="length cap in seconds (default 240)"
+        "--max-seconds", type=length_cap, default=240, help="length cap in seconds (default 240)"
     )
     bench.add_argument("--seed", type=int, default=42, help="seed (default 42)")
     bench.add_argument("--request", help="JSON file with style, lyrics and seed to bench instead")

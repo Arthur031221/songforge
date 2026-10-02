@@ -204,6 +204,27 @@ def test_generate_requires_lyrics(paths, capsys):
     assert "--lyrics" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize(
+    "command_args",
+    [
+        ["generate", "--style", "folk", "--lyrics", "hello"],
+        ["cover", "missing.mp3", "--style", "folk"],
+        ["bench"],
+    ],
+)
+@pytest.mark.parametrize("seconds", [0, 19, 361])
+def test_max_seconds_rejects_values_outside_engine_limits(command_args, seconds, capsys):
+    with pytest.raises(SystemExit) as error:
+        cli.main([*command_args, "--max-seconds", str(seconds)])
+    assert error.value.code == 2
+    assert "between 20 and 360 seconds" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("seconds", [20, 360])
+def test_length_cap_accepts_engine_limits(seconds):
+    assert cli.length_cap(str(seconds)) == seconds
+
+
 def test_doctor_json_with_fake_engine(paths, capsys):
     assert cli.main(["doctor", "--engine", "fake", "--json"]) == 0
     report = json.loads(capsys.readouterr().out)

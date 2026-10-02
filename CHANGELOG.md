@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Reject CLI length caps outside 20 to 360 seconds, matching studio validation.
+
 ## 0.1.0 (2026-09-30)
 
 First release.
