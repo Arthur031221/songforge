@@ -2,6 +2,8 @@
 
 A local, Suno-style song studio for Apple Silicon. On a MacBook Air it turned a style prompt and lyrics into a 2:53 song with vocals in 5 minutes 59 seconds[^1], with no GPU rental, no account and no subscription: a 10.4 GB download and $0 a month.
 
+![songforge creates a song while its library shows saved tracks](demo/demo.gif)
+
 Lyrics plus a style prompt become a full song with vocals, and any recording can be covered in a new genre. A 60-second piano recording of Jingle Bells became a 1:03 heavy metal cover in 2 minutes 13 seconds, transcription included. YuE2-3B runs on the Mac through MLX.
 
 [![CI](https://github.com/Arthur031221/songforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Arthur031221/songforge/actions/workflows/ci.yml)
@@ -9,8 +11,6 @@ Lyrics plus a style prompt become a full song with vocals, and any recording can
 [![Version](https://img.shields.io/badge/version-0.1.0-orange.svg)](CHANGELOG.md)
 
 **Listen first:** [arthur031221.github.io/songforge](https://arthur031221.github.io/songforge/) has every demo song and cover, each with its prompt, seed and measured time.
-
-![songforge studio](demo/demo.gif)
 
 ## Why
 
